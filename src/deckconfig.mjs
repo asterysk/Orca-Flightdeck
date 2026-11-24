@@ -121,6 +121,10 @@ export function buildConfig(text) {
         errors.push(`line ${s.line}: key has no attribute "${s.attribute}"`);
         continue;
       }
+      if (s.attribute === 'color' && !/^#[0-9a-f]{3,8}$/i.test(String(s.value))) {
+        errors.push(`line ${s.line}: color must be a hex code like "#38BDF8"`);
+        continue;
+      }
       const k = (keys.get(s.instance) ?? keys.set(s.instance, { id: s.instance }).get(s.instance));
       k[s.attribute] = s.value;
       continue;

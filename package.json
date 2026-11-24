@@ -1,6 +1,6 @@
 {
   "name": "orca-flightdeck",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "description": "Orca Flightdeck: a flight deck for your Orca coding agents, with an on-screen deck that matches any Stream Deck.",

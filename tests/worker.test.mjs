@@ -126,7 +126,13 @@ test('expand writes a self-ignoring room file in the focused local workspace and
     return realCall(name, params);
   };
   const files = new Map();
-  const fs = { mkdirSync: () => {}, writeFileSync: (p, d) => files.set(p, d), existsSync: (p) => files.has(p) };
+  const enoent = () => { throw Object.assign(new Error('nope'), { code: 'ENOENT' }); };
+  const fs = {
+    mkdirSync: () => {},
+    writeFileSync: (p, d) => files.set(p, d),
+    existsSync: (p) => files.has(p),
+    lstatSync: (p) => (files.has(p) ? { isSymbolicLink: () => false, isFile: () => true, isDirectory: () => false } : p === '/repo/.flightdeck' && files.size ? { isSymbolicLink: () => false, isFile: () => false, isDirectory: () => true } : enoent())
+  };
   const commands = new Map();
   orca.commands = { register: (id, fn) => { commands.set(id, fn); return { dispose() {} }; } };
   const w = startWorker(orca, { pollMs: 1e9, fs });
@@ -175,4 +181,55 @@ test('agents in a workspace that disappears are dropped', async () => {
   assert.deepEqual(f.snapshot().consoles.map((c) => c.terminalId), ['t2']);
   f.forget(['t2']);
   assert.equal(f.snapshot().consoles.length, 0);
+});
+
+test('expand refuses a planted symlink instead of overwriting its target', async () => {
+  const { mkdtempSync, mkdirSync, symlinkSync, writeFileSync, readFileSync: rf } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const root = mkdtempSync(join(tmpdir(), 'mc-sym-'));
+  const victim = join(root, 'victim.txt');
+  writeFileSync(victim, 'keep me\n');
+  const run = async (repo) => {
+    const orca = fakeOrca();
+    const realCall = orca.host.call;
+    orca.host.call = async (name, params) => {
+      if (name === 'workspace.readContext') return { workspaceId: 'w1' };
+      if (name === 'workspace.list') return { workspaces: [{ id: 'w1', name: 'evil', path: repo, hostId: 'local' }] };
+      if (name === 'editor.open') return { opened: true };
+      return realCall(name, params);
+    };
+    const w = startWorker(orca, { pollMs: 1e9 });
+    await w.ready;
+    try { return await orca.handlers.get('mc.expand')().then(() => null, (e) => e); } finally { w.stop(); }
+  };
+  // 1. the .flightdeck folder itself is a link
+  const repoA = join(root, 'a'); mkdirSync(repoA);
+  const elsewhere = join(root, 'elsewhere'); mkdirSync(elsewhere);
+  symlinkSync(elsewhere, join(repoA, '.flightdeck'));
+  assert.equal((await run(repoA))?.code, 'unsafe_path');
+  // 2. a file inside it is a link
+  const repoB = join(root, 'b'); mkdirSync(join(repoB, '.flightdeck'), { recursive: true });
+  symlinkSync(victim, join(repoB, '.flightdeck', '.gitignore'));
+  assert.equal((await run(repoB))?.code, 'unsafe_path');
+  assert.equal(rf(victim, 'utf8'), 'keep me\n');
+  // 3. a normal repo still works
+  const repoC = join(root, 'c'); mkdirSync(repoC);
+  assert.equal(await run(repoC), null);
+  assert.equal(rf(join(repoC, '.flightdeck', '.gitignore'), 'utf8'), '*\n');
+});
+
+test('deck bridge drops a client that never logs in', async () => {
+  const { startBridge } = await import('../src/bridge.mjs');
+  const { connect } = await import('node:net');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const b = startBridge({ path: join(mkdtempSync(join(tmpdir(), 'mc-br-')), 'deck.json'), authMs: 100 });
+  const port = await b.ready;
+  const closed = await new Promise((resolve) => {
+    const s = connect(port, '127.0.0.1');
+    s.on('close', () => resolve(true));
+    setTimeout(() => { s.destroy(); resolve(false); }, 2000);
+  });
+  b.stop();
+  assert.equal(closed, true);
 });

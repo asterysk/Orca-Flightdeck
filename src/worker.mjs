@@ -1,6 +1,6 @@
 // Composition root: wires Orca's host API and agent events to the pure fleet model.
 // Every host call is best-effort: failures go to orca.log and never take the worker down.
-import { mkdirSync, writeFileSync, existsSync, readFileSync, statSync, watchFile, unwatchFile } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, readFileSync, statSync, lstatSync, watchFile, unwatchFile, constants as FS } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { execFile } from 'node:child_process';
@@ -26,6 +26,9 @@ export function findField(tree, want) {
 const POLL_MS = 15_000;
 const PULSE_MS = 700; // HOLD / NO-GO keys flash at this beat
 const POST_DEBOUNCE_MS = 250;
+const CONFIRM_MS = 5_000; // ANSWER: second press within this window sends
+// Write a file without following a symlink at the last step (a hostile repo could plant one).
+const NOFOLLOW = FS.O_WRONLY | FS.O_CREAT | FS.O_TRUNC | (FS.O_NOFOLLOW ?? 0);
 const STATUS_ID = 'fleet';
 // Expand: a placeholder file opened in Flightdeck's custom editor, full width in the main area.
 export const ROOM_DIR = '.flightdeck';
@@ -44,7 +47,7 @@ export function deactivate() {
   running = null;
 }
 
-export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = () => Date.now(), fs = { mkdirSync, writeFileSync, existsSync }, startBridge = defaultStartBridge, exec = execFile, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = () => Date.now(), fs = { mkdirSync, writeFileSync, existsSync, lstatSync }, startBridge = defaultStartBridge, exec = execFile, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
   const fleet = createFleet({ now });
   const deck = createDeck({ keys: 6, needsShell: (a) => POWERFUL.has(a) });
   let phase = false; // pulse beat for HOLD / NO-GO keys
@@ -201,10 +204,19 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
     const ws = await focusedLocalWorkspace();
     if (!ws) throw Object.assign(new Error('No local workspace to open the mission room in.'), { code: 'no_workspace' });
     const dir = join(ws.path, ROOM_DIR);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(join(dir, '.gitignore'), '*\n');
-    const file = join(dir, ROOM_FILE);
-    if (!fs.existsSync(file)) fs.writeFileSync(file, '{"missionControl":1}\n');
+    // Refuse symlinks: a cloned repo could point .flightdeck (or a file in it) at ~/.zshrc and friends.
+    const look = (p) => { try { return fs.lstatSync(p); } catch (e) { if (e?.code === 'ENOENT') return null; throw e; } };
+    const unsafe = (p, want) => Object.assign(new Error(`Refusing to write ${p}: it is a link or not a ${want}.`), { code: 'unsafe_path' });
+    const d = look(dir);
+    if (d && (d.isSymbolicLink() || !d.isDirectory())) throw unsafe(dir, 'folder');
+    if (!d) fs.mkdirSync(dir);
+    const put = (p, data, keep) => {
+      const st = look(p);
+      if (st && (st.isSymbolicLink() || !st.isFile())) throw unsafe(p, 'file');
+      if (!(st && keep)) fs.writeFileSync(p, data, { flag: NOFOLLOW, mode: 0o644 });
+    };
+    put(join(dir, '.gitignore'), '*\n', false);
+    put(join(dir, ROOM_FILE), '{"missionControl":1}\n', true);
     const opened = await call('editor.open', { workspaceId: ws.id, path: `${ROOM_DIR}/${ROOM_FILE}` });
     if (!opened) throw Object.assign(new Error('Orca did not open the mission room.'), { code: 'open_failed' });
     return { opened: true, workspace: ws.name };
@@ -223,9 +235,14 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
         writeFileSync(configPath, DEFAULT_DECK_VRX, { mode: 0o600 });
       }
       const cfg = buildConfig(readFileSync(configPath, 'utf8'));
-      const mode = statSync(configPath).mode;
-      shellTrusted = cfg.allowShell && (mode & 0o022) === 0;
-      if (cfg.allowShell && !shellTrusted) cfg.errors.push('allow-shell ignored: deck.vrx is writable by other users (chmod 600 it)');
+      // allow-shell needs a file, and a folder, that only this user owns and can write.
+      const me = process.getuid?.();
+      const mine = (st) => (st.mode & 0o022) === 0 && (me == null || st.uid === me);
+      const fileOk = mine(statSync(configPath));
+      const dirOk = mine(statSync(dirname(configPath)));
+      shellTrusted = cfg.allowShell && fileOk && dirOk;
+      if (cfg.allowShell && !fileOk) cfg.errors.push('allow-shell ignored: deck.vrx is writable by other users or not yours (chmod 600 it)');
+      else if (cfg.allowShell && !dirOk) cfg.errors.push(`allow-shell ignored: ${dirname(configPath)} is writable by other users or not yours (chmod 700 it)`);
       deck.setConfig(cfg);
       deck.setShellAllowed(shellTrusted);
       applyGrid();
@@ -429,10 +446,19 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
   }
 
   // ANSWER: type into the agent most in need (first in the Awaiting Flight queue).
+  // Two presses: the first shows what that agent is asking, the second (within 5 s, same agent) sends.
+  // Agents often read "1" as "yes, allow", so one press must never approve something unseen.
+  let armed = null; // { terminalId, until }
   async function answer(action) {
     const c = fleet.snapshot().queue.find((q) => q.terminalId);
     if (!c) return;
     const text = String(action.text ?? '1');
+    if (!(armed && armed.terminalId === c.terminalId && now() <= armed.until)) {
+      armed = { terminalId: c.terminalId, until: now() + CONFIRM_MS };
+      tell(`ANSWER ${c.callsign}: press again to send "${text}"`, c.title || c.task || 'Waiting for input');
+      return;
+    }
+    armed = null;
     if (text) await call('terminal.sendText', { terminalId: c.terminalId, text, enter: false });
     if (action.enter !== false) await call('terminal.sendText', { terminalId: c.terminalId, text: '', enter: true });
   }

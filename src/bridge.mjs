@@ -31,13 +31,16 @@ function sameToken(a, b) {
 }
 
 // onClient(client) → client.send(msg), client.close(); onMessage(client, msg)
-export function startBridge({ onMessage, onConnect, onDisconnect, log = () => {}, path = rendezvousPath() } = {}) {
+export function startBridge({ onMessage, onConnect, onDisconnect, log = () => {}, path = rendezvousPath(), authMs = 5_000 } = {}) {
   const token = randomBytes(24).toString('hex');
   const clients = new Set();
 
   const server = createServer((socket) => {
     socket.setEncoding('utf8');
     let authed = false;
+    // A client that does not log in quickly is dropped, so idle sockets cannot pile up.
+    const authTimer = setTimeout(() => { if (!authed) socket.destroy(); }, authMs);
+    authTimer.unref?.();
     let buf = '';
     const client = {
       info: null,
@@ -64,6 +67,7 @@ export function startBridge({ onMessage, onConnect, onDisconnect, log = () => {}
         if (!authed) {
           if (msg?.type !== 'auth' || !sameToken(msg.token, token)) return socket.destroy();
           authed = true;
+          clearTimeout(authTimer);
           clients.add(client);
           client.send({ type: 'hello', protocol: DECK_PROTOCOL });
           onConnect?.(client);
@@ -77,6 +81,7 @@ export function startBridge({ onMessage, onConnect, onDisconnect, log = () => {}
       }
     });
     socket.on('close', () => {
+      clearTimeout(authTimer);
       if (clients.delete(client)) onDisconnect?.(client);
     });
     socket.on('error', () => {});

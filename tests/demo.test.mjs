@@ -191,8 +191,12 @@ test('without allow-shell the CLI keys do nothing', async () => {
   t.w.stop();
 });
 
-test('ANSWER types into the agent on HOLD', async () => {
+test('ANSWER shows the question on the first press and types on the second', async () => {
   const t = await boot();
+  await t.press(5); await t.press(5);
+  await t.press(2);
+  assert.deepEqual(t.calls('terminal.sendText'), [], 'first press sends nothing');
+  assert.match(t.calls('notifications.show').at(-1).title, /press again/);
   await t.press(5); await t.press(5);
   await t.press(2);
   const sent = t.calls('terminal.sendText');

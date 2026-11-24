@@ -319,3 +319,9 @@ test('no hardware: the on-screen deck takes its grid from deck.vrx (model name o
   assert.equal(snap.deck.connected, false);
   w.stop();
 });
+
+test('deck.vrx: key color must be a hex code', () => {
+  const c = buildConfig('@page p title = "P"\n@key a page = p\n@key a slot = 1\n@key a action = refresh\n@key a color = "red\\" onload=\\"x"\n');
+  assert.ok(c.errors.some((e) => /hex code/.test(e)));
+  assert.equal(c.pages.p.keys[0].color, undefined);
+});

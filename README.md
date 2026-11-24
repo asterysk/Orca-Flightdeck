@@ -106,7 +106,7 @@ Three pages, six keys each on a Stream Deck Mini. The last key turns the page:
 |---|---|
 | **1 · Agents** | One key per agent, each in its own colour. Press to jump to it. |
 | **2 · Mission** | **RACE** five agents · **PREVIEW** in Orca's browser · **EXPAND** to the mission room · **URGENT** jump to the agent most in need · **THEME** recolour all of Orca |
-| **3 · Tools** | **GRID** a 2×2 terminal layout · **DRIVE** computer use *(experimental)* · **ANSWER** the agent on HOLD · **NEW** add one agent · **ABORT** stop and clean up |
+| **3 · Tools** | **GRID** a 2×2 terminal layout · **DRIVE** computer use *(experimental)* · **ANSWER** the agent on HOLD (press twice: see the question, then send) · **NEW** add one agent · **ABORT** stop and clean up |
 
 Every slow key lights up and says **working** until it's done, so you always know a press landed.
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.1 · 2026-11-24 · security fixes
+
+- **EXPAND** no longer follows symlinks: a repo that plants a `.flightdeck` link (or a link inside it) is refused instead of having the link's target overwritten.
+- **ANSWER** now takes two presses: the first shows what the agent is asking, the second (within 5 s, same agent) sends. One press can no longer approve something unseen.
+- **allow-shell** also requires that you own `deck.vrx` and that its folder is not writable by others.
+- **Deck link:** a connection that does not log in within 5 seconds is dropped.
+- **deck.vrx:** key `color` must be a hex code.
+- Removed the deprecated `publisher` field (Orca takes it from the repository owner).
+
 ## 0.5.0 · 2026-11-24 · listed in the Orca plugin directory
 
 - Same code as 0.5.0-beta.1, still a beta. Version is plain `0.5.0` because the Orca directory only lists `vX.Y.Z` tags.
