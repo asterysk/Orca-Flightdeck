@@ -44,6 +44,11 @@ Orca shows what the plugin may do and gives you a fingerprint. Run the same comm
 
 <sub>No `orca` command? In Orca's Settings, search **Command line** and turn on "orca in other terminals".</sub>
 
+<p align="center">
+  <img src="images/screenshot-sidebar-top.png" alt="The Flightdeck pane in Orca's right sidebar: GO / HOLD / NO-GO counts, the on-screen deck and the Awaiting Flight queue" width="340"><br>
+  <sub>The Flightdeck pane in Orca's right sidebar. Scroll down for every agent's console, the comms loop and fuel burn.</sub>
+</p>
+
 ## ✨ What it does
 
 <table>
