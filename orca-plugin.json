@@ -1,0 +1,113 @@
+{
+  "manifestVersion": 2,
+  "id": "flightdeck",
+  "name": "Orca Flightdeck",
+  "version": "0.5.0-beta.1",
+  "execution": "trusted-worker",
+  "description": "A flight deck for your Orca coding agents: GO / HOLD / NO-GO consoles, an Awaiting Flight queue you answer in place, a full-width mission room, and an on-screen deck that matches any Stream Deck (hardware optional).",
+  "author": {
+    "name": "Steve Charles",
+    "url": "https://github.com/asterysk"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/asterysk/Orca-Flightdeck",
+  "engines": {
+    "orca": ">=1.4.260"
+  },
+  "pluginApi": 1,
+  "main": "src/worker.mjs",
+  "contributes": {
+    "panels": [
+      {
+        "id": "mission",
+        "title": "Flightdeck",
+        "icon": "rocket",
+        "entry": "panel/index.html"
+      }
+    ],
+    "commands": [
+      {
+        "id": "toggleSidebar",
+        "title": "Flightdeck: Show or hide the right sidebar",
+        "action": "sidebar.right.toggle"
+      },
+      {
+        "id": "expand",
+        "title": "Flightdeck: Open full-width mission room"
+      }
+    ],
+    "statusBarItems": [
+      {
+        "id": "fleet",
+        "text": "GO 0",
+        "icon": "rocket",
+        "tooltip": "Flightdeck",
+        "command": "toggleSidebar"
+      }
+    ],
+    "events": [
+      {
+        "on": "agent.status.changed"
+      }
+    ],
+    "settings": [
+      {
+        "key": "notify",
+        "title": "Desktop notification when an agent goes HOLD or NO-GO",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "deck",
+        "title": "Stream Deck link (lets the optional deck helper connect on this Mac)",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "customEditors": [
+      {
+        "id": "mission-room",
+        "title": "Flightdeck",
+        "extensions": [
+          ".flightdeck"
+        ],
+        "entry": "editor/index.html"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "agent:read"
+    },
+    {
+      "kind": "workspace:read"
+    },
+    {
+      "kind": "workspace:write"
+    },
+    {
+      "kind": "terminal:send"
+    },
+    {
+      "kind": "history:read"
+    },
+    {
+      "kind": "notifications:show"
+    },
+    {
+      "kind": "settings:own"
+    },
+    {
+      "kind": "storage:own"
+    },
+    {
+      "kind": "agent:launch"
+    },
+    {
+      "kind": "workspace:create"
+    },
+    {
+      "kind": "appearance:write"
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'">
+<title>Flightdeck</title>
+<style>
+:root{
+  --bg:#070B12;--card:#0C121D;--line:#1C2636;--fg:#D7E1EE;--hi:#F2F6FB;--muted:#8A9BB3;--dim:#6F8199;
+  --accent:#7FD4FF;
+  --go:#5EE6CF;--go-bg:#0E2A2A;--go-b:#1F5F5A;
+  --hold:#FFC34D;--hold-bg:#2E2410;--hold-b:#6B5320;
+  --nogo:#FF8A94;--nogo-bg:#2E1216;--nogo-b:#6E2630;
+  --done:#9FB3CC;--done-bg:#121A27;--done-b:#2A3648;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:12.5px/1.45 var(--mono)}
+main{padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{margin:0;font-size:11px;letter-spacing:.2em;color:var(--muted);font-weight:700}
+button{font:inherit;cursor:pointer}
+.hdr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:10px}
+.brand{display:flex;gap:10px;align-items:center}
+.brand b{display:block;font-size:15px;letter-spacing:.08em;color:var(--hi)}
+.brand small{color:var(--muted);letter-spacing:.16em;font-size:10px}
+.clock{font-size:16px;font-weight:700;color:var(--accent)}
+.counts{display:flex;gap:6px}
+.cnt{display:flex;flex-direction:column;align-items:center;min-width:48px;padding:4px 8px;border-radius:6px;border:1px solid}
+.cnt strong{font-size:16px}.cnt span{font-size:9px;letter-spacing:.16em}
+.st-GO{color:var(--go);background:var(--go-bg);border-color:var(--go-b)}
+.st-HOLD{color:var(--hold);background:var(--hold-bg);border-color:var(--hold-b)}
+.st-NO-GO{color:var(--nogo);background:var(--nogo-bg);border-color:var(--nogo-b)}
+.st-DONE,.st-IDLE{color:var(--done);background:var(--done-bg);border-color:var(--done-b)}
+.iconbtn{min-width:44px;min-height:32px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+.iconbtn.spin svg{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+section.box{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+section.queue{border-color:var(--hold-b);background:#141009}
+section.queue h2{color:var(--hold)}
+.q{display:flex;flex-direction:column;gap:6px;border-top:1px solid #2E2410;padding-top:8px}
+.q:first-of-type{border-top:0;padding-top:0}
+.q .top{display:flex;justify-content:space-between;gap:8px}
+.q .who{font-weight:700;color:var(--hi)}
+.q .ask{color:#D9CBA8;word-break:break-word}
+.q form{display:flex;gap:6px}
+.q input{flex:1;min-width:0;min-height:34px;border-radius:6px;border:1px solid var(--hold-b);background:#0B0905;color:var(--hi);padding:0 8px;font:inherit}
+.q .send{border:0;border-radius:6px;background:var(--go);color:#06201C;font-weight:700;letter-spacing:.1em;padding:0 12px;min-height:34px}
+.q .open{border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--fg);letter-spacing:.1em;padding:0 10px;min-height:34px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.con{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--line);text-align:left;color:inherit;width:100%}
+.con:hover{border-color:#3C5677}
+.con .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.con .cs{font-weight:700;letter-spacing:.12em;color:var(--hi)}
+.pill{font-size:9.5px;font-weight:700;letter-spacing:.16em;padding:2px 6px;border-radius:4px;border:1px solid}
+.con .t1{color:#C6D2E1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.con .t2{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.con svg{display:block;width:100%;height:30px;background:#0A101A;border-radius:4px}
+.conshdr{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.viewbtn{min-height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:10px;letter-spacing:.14em}
+.viewbtn:hover{color:var(--fg);border-color:#3C5677}
+.grid.compact{grid-template-columns:minmax(0,1fr);gap:4px}
+.compact .con{flex-direction:row;align-items:center;gap:8px;padding:6px 10px}
+.compact .con .row,.compact .con .t2,.compact .con svg,.compact .con .kv{display:none}
+.compact .con .cs-c,.compact .con .pill-c{display:inline-block}
+.con .cs-c,.con .pill-c{display:none}
+.compact .con .t1{flex:1 1 auto;min-width:0;color:var(--muted)}
+.deckbox{display:flex;flex-direction:column;gap:8px}
+.deckhdr{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.deckgrid{display:grid;gap:6px;max-width:300px}
+.deckkey{padding:0;border:1px solid var(--line);border-radius:8px;background:#0A0F18;overflow:hidden;aspect-ratio:1/1;cursor:pointer}
+.deckkey:hover{border-color:#3C5677}.deckkey:active{transform:scale(.96)}
+.deckkey img{display:block;width:100%;height:100%}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.kv span{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
+.kv b{font-weight:500;color:#E6EDF6}
+.comm{display:flex;gap:8px;font-size:11.5px}
+.comm .t{color:var(--dim);flex:0 0 auto}.comm .w{font-weight:700;flex:0 0 auto}
+.comm .m{color:#C6D2E1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fuel{display:flex;flex-direction:column;gap:3px}
+.fuel .row{display:flex;justify-content:space-between;color:#C6D2E1}
+.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+.note{color:var(--dim);font-size:10.5px}
+.empty{color:var(--muted);padding:18px 4px;text-align:center}
+.cols{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.cols>.mainc{flex:999 1 460px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.cols>.side{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.err{color:var(--nogo)}
+</style>
+</head>
+<body>
+<main id="app" aria-busy="true">
+  <header class="hdr">
+    <div class="brand">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--accent)"><circle cx="17" cy="17" r="15"/><circle cx="17" cy="17" r="8"/><path d="M17 2v6M17 26v6M2 17h6M26 17h6"/></svg>
+      <div><b>FLIGHTDECK</b><small>FLIGHT DIRECTOR VIEW</small></div>
+    </div>
+    <div class="clock" id="clock" title="Time since Flightdeck started">T+ 00:00:00</div>
+    <div class="counts" id="counts" role="status" aria-live="polite"></div>
+    <div style="display:flex;gap:6px;align-items:center">
+    <span id="collapse-hint" class="note" hidden>Close this tab (⌘W) to return to the sidebar</span>
+    <button class="iconbtn" id="expand" aria-label="Expand to full-width mission room" title="Expand to full width"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+    <button class="iconbtn" id="refresh" aria-label="Poll the room (refresh)"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    </div>
+  </header>
+
+  <section class="box deckbox" id="deck-box" aria-label="Stream Deck mirror">
+    <div class="deckhdr"><h2 id="deck-title">DECK</h2><span class="note" id="deck-state"></span></div>
+    <div class="deckgrid" id="deck"></div>
+  </section>
+
+  <section class="box queue" id="queue-box" hidden>
+    <h2 id="queue-title">AWAITING FLIGHT</h2>
+    <div id="queue"></div>
+  </section>
+
+  <div class="cols">
+    <div class="mainc">
+      <div class="conshdr"><h2 id="cons-title">CONSOLES</h2><button class="viewbtn" id="view-toggle" type="button" aria-pressed="false" aria-controls="consoles">COMPACT</button></div>
+      <div class="grid" id="consoles"></div>
+    </div>
+    <div class="side">
+      <section class="box">
+        <h2>COMMS LOOP</h2>
+        <div id="comms"></div>
+      </section>
+      <section class="box">
+        <h2>FUEL BURN · TODAY</h2>
+        <div id="fuel"></div>
+        <div class="note">Tokens from Orca's agent session history, sessions active today.</div>
+      </section>
+    </div>
+  </div>
+  <div id="error" class="err" hidden></div>
+</main>
+<script>
+;(() => {
+'use strict'
+const $ = (id) => document.getElementById(id)
+const host = globalThis.orca
+let snap = null
+let busy = false
+const drafts = new Map()
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const compact = (n) => n == null ? '—' : n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'k' : String(n)
+const dur = (ms) => { const s = Math.floor(ms / 1000); if (s < 60) return s + 's'; const m = Math.floor(s / 60); if (m < 60) return m + 'm'; return Math.floor(m / 60) + 'h ' + (m % 60) + 'm' }
+const hms = (ms) => { const s = Math.floor(ms / 1000); const p = (n) => String(n).padStart(2, '0'); return `${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}` }
+const hhmm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const COLOR = { GO: 'var(--go)', HOLD: 'var(--hold)', 'NO-GO': 'var(--nogo)', DONE: 'var(--done)', IDLE: 'var(--done)' }
+
+async function request(name, input) {
+  if (host?.plugin?.request) return host.plugin.request(name, input, { timeoutMs: 30000 })
+  if (globalThis.__MC_PREVIEW__) return globalThis.__MC_PREVIEW__(name, input)
+  throw new Error('Orca host is not available.')
+}
+
+function trace(points, status) {
+  const pts = points.length ? points : [0]
+  const step = 120 / Math.max(1, pts.length - 1)
+  const d = pts.map((v, i) => `${(i * step).toFixed(1)},${(26 - v * 22).toFixed(1)}`).join(' ')
+  return `<svg aria-hidden="true" viewBox="0 0 120 30" preserveAspectRatio="none"><path d="M0 15H120" stroke="#1C2636" stroke-width=".5"/><polyline points="${d}" fill="none" stroke="${COLOR[status]}" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>`
+}
+
+function render() {
+  if (!snap) return
+  $('app').setAttribute('aria-busy', 'false')
+  const c = snap.counts
+  $('counts').innerHTML = ['GO', 'HOLD', 'NO-GO'].map((k) => `<div class="cnt st-${k}"><strong>${c[k]}</strong><span>${k}</span></div>`).join('')
+  $('cons-title').textContent = `CONSOLES · ${snap.consoles.length} ON LOOP`
+
+  // Queue: keep any reply the person is typing across re-renders.
+  const q = snap.queue
+  $('queue-box').hidden = q.length === 0
+  $('queue-title').textContent = `AWAITING FLIGHT · ${q.length}`
+  const focused = document.activeElement?.dataset?.key
+  $('queue').innerHTML = q.map((a) => `
+    <div class="q">
+      <div class="top"><span class="who">${esc(a.callsign)} · ${esc(a.workspace || a.agent || '')}</span><span class="pill st-${a.status}">${a.status} ${dur(a.inStateMs)}</span></div>
+      <div class="ask">${esc(a.title || a.task || 'Waiting for input')}</div>
+      ${a.terminalId ? `<form data-key="${esc(a.key)}" data-term="${esc(a.terminalId)}">
+        <input id="r-${esc(a.key)}" data-key="${esc(a.key)}" aria-label="Reply to ${esc(a.callsign)}" placeholder="Reply…" autocomplete="off" value="${esc(drafts.get(a.key) || '')}">
+        <button class="send" type="submit">SEND</button>
+        <button class="open" type="button" data-open="${esc(a.terminalId)}">OPEN</button>
+      </form>` : ''}
+    </div>`).join('')
+  if (focused) { const el = $('r-' + focused); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) } }
+
+  $('consoles').innerHTML = snap.consoles.length ? snap.consoles.map((a) => `
+    <button class="con" ${a.terminalId ? `data-open="${esc(a.terminalId)}"` : 'disabled'} style="box-shadow:inset 3px 0 0 ${COLOR[a.status]}" aria-label="${esc(a.callsign)}, ${a.status}. Open terminal">
+      <span class="cs cs-c">${esc(a.callsign)}</span>
+      <span class="row"><span class="cs">${esc(a.callsign)}</span><span class="pill st-${a.status}">${a.status}</span></span>
+      <span class="t1">${esc(a.workspace || a.project || 'unassigned')}</span>
+      <span class="t2">${esc(a.agent || 'agent')}${a.branch ? ' · ' + esc(a.branch) : ''}</span>
+      ${trace(a.trace, a.status)}
+      <span class="kv"><span><span>TOKENS</span><b>${compact(a.tokens)}</b></span><span><span>IN STATE</span><b>${dur(a.inStateMs)}</b></span></span>
+      <span class="t2">&gt; ${esc(a.title || a.task || '—')}</span>
+      <span class="pill pill-c st-${a.status}">${a.status}</span>
+    </button>`).join('') : '<div class="empty">No agents on loop. Launch one in Orca and it reports in here.</div>'
+
+  const d = snap.deck
+  if (d) {
+    $('deck-title').textContent = `DECK · ${String(d.page).toUpperCase()}`
+    $('deck-state').innerHTML = `<span class="dot" style="background:${d.connected ? 'var(--go)' : 'var(--dim)'}"></span>${d.connected ? esc(d.model || 'connected') : 'on screen · ' + esc(d.screen || 'no deck')}`
+    $('deck').style.gridTemplateColumns = `repeat(${d.cols || 3}, minmax(0, 1fr))`
+    $('deck').style.maxWidth = `${(d.cols || 3) * ((d.cols || 3) <= 3 ? 100 : (d.cols || 3) <= 5 ? 84 : 68)}px`
+    $('deck').innerHTML = d.keys.map((svg, i) => `<button class="deckkey" data-deck="${i}" aria-label="Deck key ${i + 1}: ${esc(d.labels?.[i] || 'empty')}"><img alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}"></button>`).join('')
+  }
+
+  $('comms').innerHTML = snap.comms.length ? snap.comms.map((m) => `
+    <div class="comm"><span class="t">${hhmm(m.t)}</span><span class="w" style="color:${COLOR[m.status]}">${esc(m.who)}</span><span class="m" title="${esc(m.msg)}">${esc(m.msg)}</span></div>`).join('') : '<div class="note">Quiet loop.</div>'
+
+  const max = Math.max(1, ...snap.fuel.map((f) => f.tokens))
+  $('fuel').innerHTML = snap.fuel.length ? snap.fuel.map((f) => `
+    <div class="fuel"><div class="row"><span>${esc(f.agent)}</span><span>${compact(f.tokens)}</span></div><div class="bar"><i style="width:${Math.round(f.tokens / max * 100)}%"></i></div></div>`).join('') : '<div class="note">No sessions today yet.</div>'
+}
+
+async function load(kind = 'mc.snapshot') {
+  if (busy) return
+  busy = true
+  $('refresh').classList.add('spin')
+  try {
+    snap = await request(kind)
+    $('error').hidden = true
+    render()
+  } catch (e) {
+    $('error').hidden = false
+    $('error').textContent = e?.message || String(e)
+  } finally {
+    busy = false
+    $('refresh').classList.remove('spin')
+  }
+}
+
+// Deck mirror: click = tap, hold (half a second) or right-click = hold, like the hardware.
+async function deckSend(index, hold) {
+  try { const deck = await request('mc.deckPress', { index, hold }); if (snap && deck) { snap.deck = deck; render() } } catch (e) { console.error(e) }
+}
+let holdTimer = null
+let held = false
+document.addEventListener('pointerdown', (ev) => {
+  const key = ev.target.closest('[data-deck]')
+  if (!key || ev.button !== 0) return
+  held = false
+  clearTimeout(holdTimer)
+  holdTimer = setTimeout(() => { held = true; deckSend(Number(key.dataset.deck), true) }, 500)
+})
+document.addEventListener('pointerup', () => clearTimeout(holdTimer))
+document.addEventListener('pointerleave', () => clearTimeout(holdTimer))
+document.addEventListener('contextmenu', (ev) => {
+  const key = ev.target.closest('[data-deck]')
+  if (!key) return
+  ev.preventDefault()
+  deckSend(Number(key.dataset.deck), true)
+})
+
+document.addEventListener('click', async (ev) => {
+  const key = ev.target.closest('[data-deck]')
+  if (key) {
+    ev.preventDefault()
+    if (held) { held = false; return }
+    await deckSend(Number(key.dataset.deck), false)
+    return
+  }
+  const open = ev.target.closest('[data-open]')
+  if (open) { ev.preventDefault(); try { await request('mc.focus', { terminalId: open.dataset.open }) } catch (e) { console.error(e) } }
+})
+document.addEventListener('input', (ev) => { const k = ev.target.dataset?.key; if (k) drafts.set(k, ev.target.value) })
+document.addEventListener('submit', async (ev) => {
+  ev.preventDefault()
+  const form = ev.target
+  const input = form.querySelector('input')
+  const text = input.value.trim()
+  if (!text) return
+  try {
+    await request('mc.reply', { terminalId: form.dataset.term, text })
+    drafts.delete(form.dataset.key)
+    input.value = ''
+  } catch (e) { console.error(e) }
+})
+$('refresh').addEventListener('click', () => load('mc.refresh'))
+
+// Compact view: one line per agent. Remembered in the plugin's own storage when Orca grants it.
+const VIEW_KEY = 'consolesView'
+let compactView = false
+function applyView() {
+  const b = $('view-toggle')
+  b.textContent = compactView ? 'EXPANDED' : 'COMPACT'
+  b.setAttribute('aria-pressed', String(compactView))
+  b.title = compactView ? 'Show full console cards' : 'One line per agent'
+  $('consoles').classList.toggle('compact', compactView)
+}
+async function readView() {
+  try {
+    const r = await host?.storage?.get?.(VIEW_KEY)
+    const v = r && typeof r === 'object' && 'value' in r ? r.value : r
+    if (v === 'compact' || v === 'expanded') return v
+  } catch (e) { console.warn('Flightdeck: storage read failed', e) }
+  try { return localStorage.getItem('mc.' + VIEW_KEY) } catch { return null }
+}
+function saveView(v) {
+  try { const r = host?.storage?.set?.(VIEW_KEY, v); r?.catch?.((e) => console.warn('Flightdeck: storage write failed', e)) } catch (e) { console.warn(e) }
+  try { localStorage.setItem('mc.' + VIEW_KEY, v) } catch {}
+}
+$('view-toggle').addEventListener('click', () => { compactView = !compactView; applyView(); saveView(compactView ? 'compact' : 'expanded') })
+readView().then((v) => { if (v) { compactView = v === 'compact'; applyView() } })
+
+// editor/index.html (the full-width tab) sets __MC_EDITOR; the sidebar panel does not.
+const inEditor = globalThis.__MC_EDITOR === true
+if (inEditor) {
+  $('expand').hidden = true
+  $('collapse-hint').hidden = false
+  host.document.session?.().catch?.(() => {})
+  setInterval(() => load(), 3000)
+}
+$('expand').addEventListener('click', async () => {
+  try { await request('mc.expand') ; $('error').hidden = true }
+  catch (e) { $('error').hidden = false; $('error').textContent = e?.message || String(e) }
+})
+
+// Local clock between snapshots.
+let base = { at: Date.now() }
+setInterval(() => { if (snap) $('clock').textContent = 'T+ ' + hms(snap.elapsedMs + (Date.now() - base.at)) }, 1000)
+const onSnap = (s) => { snap = s; base = { at: Date.now() }; render() }
+
+host?.plugin?.on?.('mc.changed', onSnap)
+load().then(() => { base = { at: Date.now() } })
+})()
+</script>
+</body>
+</html>
