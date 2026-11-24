@@ -50,6 +50,8 @@ Orca shows what the plugin may do and gives you a fingerprint. Run the same comm
 - **Installed from Git:** `orca plugin update asterysk.flightdeck`. Version-tag installs move to the newest `vX.Y.Z` tag.
 - **Installed from the Orca directory:** updates arrive on their own (Orca checks every 6 hours; new releases list after about 12 hours).
 
+Or use the deck: **UPDATE** on the Plugin page checks GitHub on the first tap and installs on the second (needs `allow-shell = true` in `deck.vrx`; without it, it tells you the command to run).
+
 An update that adds permissions, commands, panels or shortcuts shows **Update needs review** in Orca. Approve it once. The release notes say when this applies.
 
 <p align="center">
@@ -108,9 +110,9 @@ Needs-you and failed keys **flash**, the status bar shows `Running 3 · Needs yo
 
 ## 🎛 The deck
 
-Three pages, six keys each on a Stream Deck Mini. The last key turns the page:
+Four pages, six keys each on a Stream Deck Mini. The last key turns the page:
 
-- **Tap** it: next page (1 → 2 → 3 → 1).
+- **Tap** it: next page (1 → 2 → 3 → 4 → 1).
 - **Hold** it: straight back to your agents.
 
 <img src="images/deck-pages.png" alt="The three deck pages" width="760">
@@ -120,6 +122,7 @@ Three pages, six keys each on a Stream Deck Mini. The last key turns the page:
 | **1 · Agents** | One key per agent: its workspace and agent, in its status colour. Press to jump to it. |
 | **2 · Mission** | **RACE** five agents · **PREVIEW** in Orca's browser · **EXPAND** to the full-width view · **URGENT** jump to the agent most in need · **THEME** recolour all of Orca |
 | **3 · Tools** | **GRID** a 2×2 terminal layout · **DRIVE** computer use *(experimental)* · **ANSWER** the agent that needs you (press twice: see the question, then send) · **NEW** add one agent · **ABORT** stop and clean up |
+| **4 · Plugin** | **UPDATE**: tap to check for a new version, tap again to install it |
 
 Every slow key lights up and says **working** until it's done, so you always know a press landed.
 

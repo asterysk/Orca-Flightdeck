@@ -113,6 +113,7 @@ export function createDeck({ keys = 6, config = buildConfig(DEFAULT_DECK_VRX), n
   let shellOn = false;
   let sub = 0; // which screenful of a page that does not fit the deck
   const busy = new Set(); // "page:slot" of keys whose action is still running
+  const live = new Map(); // key id -> { sub, color } the worker sets while the key runs (UPDATE)
 
   // home first, then the pages in the order the file gives (`@deck <id> pages = [...]`) or wrote them.
   function order() {
@@ -183,7 +184,8 @@ export function createDeck({ keys = 6, config = buildConfig(DEFAULT_DECK_VRX), n
       const items = cfg.pages[page].keys.map((k) => {
         const { id, page: _p, slot, label, sub: subtitle, glyph, action, color, ...params } = k;
         const disabled = needsShell(action) && !shellOn;
-        return { kind: 'item', slot, color: color || NAV, label, sub: subtitle, glyph, disabled, busy: busy.has(`${page}:${id}`), phase, key: id, action: disabled ? { type: 'none' } : { type: action, ...params } };
+        const over = live.get(id) ?? {};
+        return { kind: 'item', slot, color: over.color || color || NAV, label, sub: over.sub ?? subtitle, glyph, disabled, busy: busy.has(`${page}:${id}`), phase, key: id, action: disabled ? { type: 'none' } : { type: action, ...params } };
       });
       out = paginate(items, slots, true);
     }
@@ -222,6 +224,11 @@ export function createDeck({ keys = 6, config = buildConfig(DEFAULT_DECK_VRX), n
     keyAt(index) {
       const f = lastFaces[index];
       return f?.kind === 'item' && f.key ? `${page}:${f.key}` : null;
+    },
+    // Live face for a key id (UPDATE shows the version it found).
+    setFace(id, face) {
+      if (face) live.set(id, face);
+      else live.delete(id);
     },
     setBusy(token, on) {
       if (!token) return;
