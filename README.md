@@ -44,6 +44,14 @@ Orca shows what the plugin may do and gives you a fingerprint. Run the same comm
 
 <sub>No `orca` command? In Orca's Settings, search **Command line** and turn on "orca in other terminals".</sub>
 
+### Updating
+
+- **Cloned with the quick start:** `git pull` in the folder. Orca reloads it.
+- **Installed from Git:** `orca plugin update asterysk.flightdeck`. Version-tag installs move to the newest `vX.Y.Z` tag.
+- **Installed from the Orca directory:** updates arrive on their own (Orca checks every 6 hours; new releases list after about 12 hours).
+
+An update that adds permissions, commands, panels or shortcuts shows **Update needs review** in Orca. Approve it once. The release notes say when this applies.
+
 <p align="center">
   <img src="images/screenshot-sidebar-top.png" alt="The Flightdeck pane in Orca's right sidebar: Running / Needs you / Failed counts, the Needs you queue and one line per agent" width="340"><br>
   <sub>The Flightdeck pane in Orca's right sidebar. The deck, activity and tokens fold away below. A short "How Flightdeck works" card shows on first run.</sub>
