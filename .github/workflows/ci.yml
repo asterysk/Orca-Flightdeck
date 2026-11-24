@@ -19,7 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # Private copies test on Linux only (macOS minutes cost 10x there); public tests both.
+        os: ${{ github.event.repository.private && fromJSON('["ubuntu-latest"]') || fromJSON('["ubuntu-latest", "macos-latest"]') }}
         node: [20, 22]
     steps:
       - uses: actions/checkout@v4
