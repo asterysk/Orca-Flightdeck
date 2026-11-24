@@ -230,12 +230,19 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
     return { opened: true, workspace: ws.name };
   }
   orca.panels.handle('mc.expand', expandRoom);
-  // The full-width view's collapse button: close the tab it lives in. The click that pressed the
-  // button made that tab the active one, so Orca's own "close active tab" action closes exactly it.
+  // The full-width view's collapse button. Plugins may not run Orca's "close tab" action, so with
+  // allow-shell it presses ⌘W in Orca through Orca's own computer use: the click on the button made
+  // the full-width tab the active one, so that is the tab ⌘W closes. Without allow-shell (or if the
+  // key press fails) it goes back to the agent most in need instead, leaving the tab open behind it.
   orca.panels.handle('mc.collapse', async () => {
-    const r = await call('commands.run', { action: 'tab.close' });
-    if (!r) throw Object.assign(new Error(`Could not close the tab (${lastError || 'Orca refused'}). Press ⌘W instead.`), { code: 'close_failed' });
-    return { closed: true };
+    if (shellTrusted) {
+      const r = await cli.run(['computer', 'hotkey', '--app', 'Orca', '--key', 'CmdOrCtrl+W', '--no-screenshot'], { cwd: '/' });
+      if (r.ok) return { closed: true };
+    }
+    const s = fleet.snapshot();
+    const c = s.queue.find((q) => q.terminalId) ?? s.consoles.find((q) => q.terminalId);
+    if (c && (await call('terminal.focus', { terminalId: c.terminalId }))) return { closed: false, focused: c.terminalId };
+    throw Object.assign(new Error('Could not leave the full-width view. Press ⌘W to close it.'), { code: 'close_failed' });
   });
   try { orca.commands?.register?.('expand', () => expandRoom()); } catch (e) { orca.log(`Flightdeck: command unavailable: ${e?.message ?? e}`); }
 

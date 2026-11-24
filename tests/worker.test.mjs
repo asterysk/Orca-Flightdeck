@@ -127,15 +127,16 @@ test('Mission mode setting: GO / HOLD wording, callsigns in notifications and on
   }
 });
 
-test('collapse closes the full-width tab with Orca\'s close-active-tab action, and says so when it cannot', async () => {
+test('collapse without allow-shell goes back to the agent most in need, never runs close-tab', async () => {
   const orca = fakeOrca();
   const w = startWorker(orca, { pollMs: 1e9 });
   try {
     await w.ready;
-    assert.deepEqual(await orca.handlers.get('mc.collapse')(), { closed: true });
-    assert.ok(orca.calls.some(([n, p]) => n === 'commands.run' && p.action === 'tab.close'));
-    orca.host.call = async (name) => { if (name === 'commands.run') throw Object.assign(new Error('nope'), { code: 'denied' }); };
-    await assert.rejects(() => orca.handlers.get('mc.collapse')(), /Press ⌘W instead/);
+    assert.deepEqual(await orca.handlers.get('mc.collapse')(), { closed: false, focused: 't1' });
+    assert.ok(orca.calls.some(([n, p]) => n === 'terminal.focus' && p.terminalId === 't1'));
+    assert.ok(!orca.calls.some(([n]) => n === 'commands.run'), 'Orca does not let plugins run tab.close');
+    orca.host.call = async () => { throw Object.assign(new Error('nope'), { code: 'denied' }); };
+    await assert.rejects(() => orca.handlers.get('mc.collapse')(), /Press ⌘W to close it/);
   } finally {
     w.stop();
   }

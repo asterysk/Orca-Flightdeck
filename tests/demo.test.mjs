@@ -274,3 +274,27 @@ test('demo deck: project is optional and only pins RACE and NEW', () => {
   assert.equal(pinned.pages.tools.keys.find((k) => k.id === 'new').project, 'mission-demo');
   assert.equal(pinned.allowShell, true);
 });
+
+test('collapse with allow-shell presses ⌘W in Orca through the orca CLI', async () => {
+  const { orca, runs, w, calls } = await boot();
+  try {
+    assert.deepEqual(await orca.handlers.get('mc.collapse')(), { closed: true });
+    const hk = runs.find((r) => r.args[0] === 'computer' && r.args[1] === 'hotkey');
+    assert.ok(hk, 'ran orca computer hotkey');
+    assert.deepEqual(hk.args, ['computer', 'hotkey', '--app', 'Orca', '--key', 'CmdOrCtrl+W', '--no-screenshot', '--json']);
+    assert.equal(calls('terminal.focus').length, 0, 'no fallback when the key press worked');
+  } finally {
+    w.stop();
+  }
+});
+
+test('collapse with allow-shell off does not touch the CLI', async () => {
+  const { orca, runs, w, calls } = await boot({ allowShell: false });
+  try {
+    assert.deepEqual(await orca.handlers.get('mc.collapse')(), { closed: false, focused: 't-hold' });
+    assert.ok(!runs.some((r) => r.args[0] === 'computer'));
+    assert.deepEqual(calls('terminal.focus'), [{ terminalId: 't-hold' }]);
+  } finally {
+    w.stop();
+  }
+});

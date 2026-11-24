@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Close the full-width view from its own arrows:** in the full-width tab the ⤢ button turns into a collapse button that closes the tab (Orca's "close active tab"). If Orca refuses, it says so and suggests ⌘W.
+- **Leave the full-width view from its own arrows:** in the full-width tab the ⤢ button turns into a collapse button. Orca does not let plugins close tabs, so with `allow-shell = true` it presses ⌘W in Orca through Orca's computer use (`orca computer hotkey`), closing the tab you just clicked in. Without `allow-shell` it jumps back to the agent most in need and leaves the tab open behind it.
 - **Pinned mini deck:** a PIN button on the deck keeps a small deck (about 56px keys) under the counts in the sidebar, always open. UNPIN puts it back with the folded sections. Remembered between sessions.
 
 ## 0.6.0 · 2026-11-24 · plain words by default, renamed to Flightdeck for Orca

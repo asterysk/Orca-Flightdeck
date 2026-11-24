@@ -76,7 +76,7 @@ One key starts **five agents on the same task**, each in its own new workspace. 
 <td valign="top">
 
 ### 🖥 Full-width view
-Open the whole view as a **full-width tab** with the ⤢ arrows, and click them again to close it. It's made for a second screen, a team room or a live demo.
+Open the whole view as a **full-width tab** with the ⤢ arrows. Click them again to close it (with `allow-shell` on; otherwise they take you back to your agent). It's made for a second screen, a team room or a live demo.
 
 </td>
 </tr>
