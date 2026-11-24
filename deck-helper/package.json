@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Optional: drives an Elgato Stream Deck directly over USB for Orca Flightdeck (no Elgato app).",
+  "description": "Optional: drives an Elgato Stream Deck directly over USB for Flightdeck for Orca (no Elgato app).",
   "license": "MIT",
   "main": "helper.mjs",
   "scripts": {

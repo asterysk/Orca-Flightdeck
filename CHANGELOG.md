@@ -2,6 +2,8 @@
 
 ## Unreleased · plain words by default
 
+- **Renamed to Flightdeck for Orca.** The Orca plugin directory reserves display names that start with "Orca" for official plugins. The plugin id (`flightdeck`), settings and `~/.flightdeck/` are unchanged, and so is the repository URL.
+
 From first-user feedback: a new user should understand the screen in seconds, without the flight-control vocabulary.
 
 - **Plain words by default:** Running / Needs you / Failed / Done instead of GO / HOLD / NO-GO. Sections are **Agents**, **Needs you**, **Activity** and **Tokens today**, and the clock reads `Session 3h 12m` instead of `T+`. The status bar and desktop alerts use the same words.

@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✈︎ Orca Flightdeck
+# ✈︎ Flightdeck for Orca
 
 **Run a fleet of coding agents like a mission control room.**
 
@@ -12,7 +12,7 @@ Fly it all from a deck of keys: on screen, or on any Stream Deck.
 [![License: MIT](https://img.shields.io/badge/license-MIT-7FD4FF?style=flat-square)](LICENSE)
 [![Stream Deck: optional](https://img.shields.io/badge/Stream%20Deck-optional-F472B6?style=flat-square)](#-hardware-optional)
 
-<img src="images/social-card.png" alt="Orca Flightdeck" width="820">
+<img src="images/social-card.png" alt="Flightdeck for Orca" width="820">
 
 [**Quick start**](#-quick-start-60-seconds) · [**Features**](#-what-it-does) · [**The deck**](#-the-deck) · [**Customise**](#-make-the-deck-yours) · [**FAQ**](#-faq)
 

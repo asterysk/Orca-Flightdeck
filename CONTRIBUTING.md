@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping with Orca Flightdeck. Issues and pull requests are welcome.
+Thanks for helping with Flightdeck for Orca. Issues and pull requests are welcome.
 
 ## Before you start
 

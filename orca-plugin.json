@@ -1,10 +1,10 @@
 {
   "manifestVersion": 2,
   "id": "flightdeck",
-  "name": "Orca Flightdeck",
+  "name": "Flightdeck for Orca",
   "version": "0.5.1",
   "execution": "trusted-worker",
-  "description": "A flight deck for your Orca coding agents: GO / HOLD / NO-GO consoles, an Awaiting Flight queue you answer in place, a full-width mission room, and an on-screen deck that matches any Stream Deck (hardware optional).",
+  "description": "Every Orca coding agent on one screen: see what is running, what needs you and what failed, answer agents in place, open a full-width view, and drive it all from an on-screen deck that matches any Stream Deck (hardware optional).",
   "author": {
     "name": "Steve Charles",
     "url": "https://github.com/asterysk"
