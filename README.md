@@ -28,7 +28,7 @@ Fly it all from a deck of keys: on screen, or on any Stream Deck.
 - *Which one is waiting for me to say yes?*
 - *Which one just failed?*
 
-**Flightdeck puts the answer on one screen.** Every agent gets a callsign and a status: **GO**, **HOLD** or **NO-GO**. Anything waiting on you jumps to the top, with a reply box right there.
+**Flightdeck puts the answer on one screen.** Every agent shows its workspace, agent and branch, and a status in plain colours: 🔵 **Running**, 🟠 **Needs you**, 🔴 **Failed**, 🟢 **Done**. Anything waiting on you jumps to the top, with a reply box right there.
 
 > An independent plugin for Orca, not made by the Orca team.
 
@@ -45,8 +45,8 @@ Orca shows what the plugin may do and gives you a fingerprint. Run the same comm
 <sub>No `orca` command? In Orca's Settings, search **Command line** and turn on "orca in other terminals".</sub>
 
 <p align="center">
-  <img src="images/screenshot-sidebar-top.png" alt="The Flightdeck pane in Orca's right sidebar: GO / HOLD / NO-GO counts, the on-screen deck and the Awaiting Flight queue" width="340"><br>
-  <sub>The Flightdeck pane in Orca's right sidebar. Scroll down for every agent's console, the comms loop and fuel burn.</sub>
+  <img src="images/screenshot-sidebar-top.png" alt="The Flightdeck pane in Orca's right sidebar: Running / Needs you / Failed counts, the Needs you queue and one line per agent" width="340"><br>
+  <sub>The Flightdeck pane in Orca's right sidebar. The deck, activity and tokens fold away below. A short "How Flightdeck works" card shows on first run.</sub>
 </p>
 
 ## ✨ What it does
@@ -56,13 +56,13 @@ Orca shows what the plugin may do and gives you a fingerprint. Run the same comm
 <td width="50%" valign="top">
 
 ### 🛰 Every agent, one screen
-A console card per agent, across all your workspaces: status, branch, agent type, tokens, time in state and a live activity trace. Click a card to jump straight to its terminal.
+A card per agent, across all your workspaces: workspace, agent, branch, status, tokens, time in state and a live activity trace. Click a card to jump straight to its terminal. One line per agent in the sidebar, full cards in the wide view.
 
 </td>
 <td width="50%" valign="top">
 
-### ✋ Awaiting Flight
-Agents that are blocked, waiting or failed float to the top. **Type a reply and hit SEND** without leaving the room, or OPEN the terminal.
+### ✋ Needs you
+Agents that are blocked, waiting or failed float to the top. **Type a reply and hit SEND** without leaving Flightdeck, or OPEN the terminal.
 
 </td>
 </tr>
@@ -75,7 +75,7 @@ One key starts **five agents on the same task**, each in its own new workspace. 
 </td>
 <td valign="top">
 
-### 🖥 Mission room
+### 🖥 Full-width view
 Open the whole view as a **full-width tab**. It's made for a second screen, a team room or a live demo.
 
 </td>
@@ -89,14 +89,14 @@ A Stream Deck-style grid **on screen**: agents on page one, actions on the next.
 </td>
 <td valign="top">
 
-### 🔔 Never miss a HOLD
-HOLD and NO-GO keys **flash**, the status bar shows `GO 3 · HOLD 2`, and a desktop alert tells you when an agent needs you.
+### 🔔 Never miss a question
+Needs-you and failed keys **flash**, the status bar shows `Running 3 · Needs you 2`, and a desktop alert tells you when an agent needs you.
 
 </td>
 </tr>
 </table>
 
-<img src="images/screenshot-wide.png" alt="The mission room: deck, Awaiting Flight queue, consoles, comms loop and fuel burn">
+<img src="images/screenshot-wide.png" alt="The full-width view: deck, Needs you queue, agent cards, activity and tokens today">
 
 ## 🎛 The deck
 
@@ -109,9 +109,9 @@ Three pages, six keys each on a Stream Deck Mini. The last key turns the page:
 
 | Page | What's on it |
 |---|---|
-| **1 · Agents** | One key per agent, each in its own colour. Press to jump to it. |
-| **2 · Mission** | **RACE** five agents · **PREVIEW** in Orca's browser · **EXPAND** to the mission room · **URGENT** jump to the agent most in need · **THEME** recolour all of Orca |
-| **3 · Tools** | **GRID** a 2×2 terminal layout · **DRIVE** computer use *(experimental)* · **ANSWER** the agent on HOLD (press twice: see the question, then send) · **NEW** add one agent · **ABORT** stop and clean up |
+| **1 · Agents** | One key per agent: its workspace and agent, in its status colour. Press to jump to it. |
+| **2 · Mission** | **RACE** five agents · **PREVIEW** in Orca's browser · **EXPAND** to the full-width view · **URGENT** jump to the agent most in need · **THEME** recolour all of Orca |
+| **3 · Tools** | **GRID** a 2×2 terminal layout · **DRIVE** computer use *(experimental)* · **ANSWER** the agent that needs you (press twice: see the question, then send) · **NEW** add one agent · **ABORT** stop and clean up |
 
 Every slow key lights up and says **working** until it's done, so you always know a press landed.
 
@@ -133,6 +133,12 @@ npm install && ./install-launchagent.sh     # starts at login
 ```
 
 Works with the Mini, Neo, MK.2, XL, + and Pedal. Quit the Elgato app first, because only one program can own the deck.
+
+## 🛰 Mission mode
+
+Prefer the flight-control feel? Turn on **Mission mode** in Orca's **Settings → Plugins → Flightdeck**. You get the original look: **GO / HOLD / NO-GO**, NASA-style callsigns (FIDO, GUIDO, EECOM…), one colour per agent on the deck, and a `T+` mission clock. It switches within one refresh.
+
+<img src="images/screenshot-wide-mission.png" alt="Mission mode: GO / HOLD / NO-GO, callsigns and the original colours">
 
 ## 🛠 Make the deck yours
 
@@ -161,11 +167,11 @@ Want the full demo deck, with RACE, THEME and the rest?
 |---|---|---|
 | `page` | `target` | Opens a page (`home` = agents) |
 | `orca` | `target` | Runs an Orca built-in, e.g. `"sidebar.right.toggle"` |
-| `urgent` · `expand` · `refresh` | | Worst agent · mission room · poll now |
+| `urgent` · `expand` · `refresh` | | Agent most in need · full-width view · refresh now |
 | `focus` | `workspace` | Jumps to a workspace's agent |
 | `launch` | `agent`, `workspace`, `prompt` | Starts an agent in a workspace |
 | `race` · `new` | `agents`, `count`, `prompt`, `setup`, `project` | New workspaces, one agent each |
-| `answer` | `text`, `enter` | Replies to the agent on HOLD |
+| `answer` | `text`, `enter` | Replies to the agent that needs you (press twice) |
 | `abort` | | Stops what RACE/NEW started |
 | `theme` | | Next colour scheme (hold: back to dark) |
 | `app` · `url` | `app` · `url` | Opens a Mac app · a link |
@@ -201,13 +207,18 @@ Flightdeck itself sends nothing anywhere: it runs inside Orca on your machine an
 Hold THEME for a close copy of Orca's dark look, or pick your own theme again in Orca's settings. Orca doesn't let plugins switch built-in themes back.
 </details>
 
+<details><summary><b>What are GO, HOLD and the callsigns I've seen in screenshots?</b></summary>
+That's Mission mode, an optional setting with flight-control wording. Plain words are the default. See <a href="#-mission-mode">Mission mode</a>.
+</details>
+
 <details><summary><b>Windows or Linux?</b></summary>
 The plugin follows Orca's platforms. The optional hardware helper is macOS-only for now.
 </details>
 
 ## 🗺 Roadmap
 
-- [x] Mission room, Awaiting Flight, consoles
+- [x] Agents view, Needs you queue, full-width view
+- [x] Plain words by default, Mission mode optional
 - [x] On-screen deck in any grid, Stream Deck optional
 - [x] RACE / ABORT, THEME, page key with hold
 - [ ] Remember RACE runs across restarts
@@ -220,7 +231,7 @@ The plugin follows Orca's platforms. The optional hardware helper is macOS-only 
 Issues and pull requests are welcome. To hack on it:
 
 ```sh
-orca plugin dev watch .     # live-reload in Orca
+orca plugin dev load .      # load in Orca (reloads on save)
 npm test                    # tests against a fake Orca
 ```
 

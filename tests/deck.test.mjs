@@ -21,7 +21,7 @@ test('home page: agents then the page key on the last key', () => {
   const f = d.render(snapWith(5));
   assert.equal(f.keys.length, 6);
   assert.equal(f.page, 'home');
-  assert.deepEqual(f.labels.slice(0, 5), ['C0', 'C1', 'C2', 'C3', 'C4']);
+  assert.deepEqual(f.labels.slice(0, 5), ['ws0', 'ws1', 'ws2', 'ws3', 'ws4'], 'plain mode: keys are named by workspace');
   assert.equal(f.labels[5], '1/3 ▸');
   assert.deepEqual(d.press(0), { type: 'focus', terminalId: 't0' });
 });
@@ -65,19 +65,51 @@ test('keys that run the orca command line are dimmed until allow-shell', () => {
   assert.equal(d.press(1).type, 'preview');
 });
 
-test('agent keys: stable order and colour by callsign, HOLD pulses', () => {
+test('mission mode agent keys: callsign labels, one colour per agent, HOLD pulses', () => {
   const d = createDeck({ keys: 6 });
   const snap = { consoles: [
     { callsign: 'GUIDO', status: 'HOLD', terminalId: 'b' },
     { callsign: 'FIDO', status: 'GO', terminalId: 'a' }
   ] };
-  const a = d.render(snap, 80, { phase: false });
+  const a = d.render(snap, 80, { phase: false, mission: true });
   assert.deepEqual(a.labels.slice(0, 2), ['FIDO', 'GUIDO'], 'callsign order, not status order');
   assert.match(a.keys[0], /#8B7CFF/);
   assert.match(a.keys[1], /#38BDF8/);
-  const b = d.render(snap, 80, { phase: true });
+  assert.match(a.keys[1], />HOLD</);
+  const b = d.render(snap, 80, { phase: true, mission: true });
   assert.notEqual(a.keys[1], b.keys[1], 'HOLD key changes with the beat');
   assert.equal(a.keys[0], b.keys[0], 'GO key does not');
+});
+
+test('plain agent keys: workspace and agent, status colour, plain status word, stable order', () => {
+  const d = createDeck({ keys: 6 });
+  const snap = { consoles: [
+    { callsign: 'GUIDO', status: 'HOLD', workspace: 'api', agent: 'codex', terminalId: 'b' },
+    { callsign: 'FIDO', status: 'GO', workspace: 'web-app', agent: 'claude', terminalId: 'a' },
+    { callsign: 'EECOM', status: 'NO-GO', agent: 'opencode', terminalId: 'c' },
+    { callsign: 'INCO', status: 'DONE', workspace: 'docs', agent: 'claude', terminalId: 'd' }
+  ] };
+  const f = d.render(snap);
+  assert.deepEqual(f.labels.slice(0, 4), ['web-app', 'api', 'opencode', 'docs'], 'first-seen order; agent kind when there is no workspace');
+  assert.match(f.keys[0], /#60A5FA/, 'running is blue');
+  assert.match(f.keys[0], />RUNNING</);
+  assert.match(f.keys[0], />claude</, 'agent kind under the workspace');
+  assert.match(f.keys[1], /#FB923C/, 'needs you is orange');
+  assert.match(f.keys[1], />NEEDS YOU</);
+  assert.match(f.keys[2], /#F87171/, 'failed is red');
+  assert.match(f.keys[2], />FAILED</);
+  assert.match(f.keys[3], /#4ADE80/, 'done is green');
+  for (const k of f.keys.slice(0, 4)) assert.doesNotMatch(k, /#8B7CFF|GUIDO|FIDO|EECOM|INCO/, 'no per-agent colours or callsigns');
+});
+
+test('plain agent keys: two agents in one workspace show their branches', () => {
+  const d = createDeck({ keys: 6 });
+  const f = d.render({ consoles: [
+    { callsign: 'FIDO', status: 'GO', workspace: 'web-app', agent: 'claude', branch: 'feat/a', terminalId: 'a' },
+    { callsign: 'GUIDO', status: 'GO', workspace: 'web-app', agent: 'claude', branch: 'feat/b', terminalId: 'b' }
+  ] });
+  assert.match(f.keys[0], />feat\/a</);
+  assert.match(f.keys[1], />feat\/b</);
 });
 
 test('key size follows the device and labels are escaped', () => {
@@ -262,12 +294,12 @@ test('any grid: big decks show more, small decks page with MORE, layout by slot 
   assert.equal(f.labels[31], '1/3 ▸');
   const mini = createDeck({ keys: 6 });
   let m = mini.render(snapWith(9));
-  assert.deepEqual(m.labels, ['C0', 'C1', 'C2', 'C3', 'MORE', '1/3 ▸']);
+  assert.deepEqual(m.labels, ['ws0', 'ws1', 'ws2', 'ws3', 'MORE', '1/3 ▸']);
   mini.press(4);
   m = mini.render(snapWith(9));
-  assert.deepEqual(m.labels, ['C4', 'C5', 'C6', 'C7', 'MORE', '1/3 ▸']);
+  assert.deepEqual(m.labels, ['ws4', 'ws5', 'ws6', 'ws7', 'MORE', '1/3 ▸']);
   mini.press(4); mini.press(4);
-  assert.equal(mini.render(snapWith(9)).labels[0], 'C0', 'MORE wraps around');
+  assert.equal(mini.render(snapWith(9)).labels[0], 'ws0', 'MORE wraps around');
   // A config page placed for a big deck: exact slots on the big deck, paged on the Mini.
   const lines = ['@page menu title = "M"', '@key go page = menu', '@key go slot = 1', '@key go label = "GO"', '@key go action = page', '@key go target = p', '@page p title = "P"'];
   for (const n of [1, 2, 9]) lines.push(`@key k${n} page = p`, `@key k${n} slot = ${n}`, `@key k${n} label = "K${n}"`, `@key k${n} action = refresh`);

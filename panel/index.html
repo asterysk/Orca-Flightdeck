@@ -9,11 +9,22 @@
 :root{
   --bg:#070B12;--card:#0C121D;--line:#1C2636;--fg:#D7E1EE;--hi:#F2F6FB;--muted:#8A9BB3;--dim:#6F8199;
   --accent:#7FD4FF;
+  /* Plain mode (default): colour means status. Running blue, needs you orange, failed red, done green. */
+  --go:#60A5FA;--go-bg:#0E1C30;--go-b:#25446E;
+  --hold:#FB923C;--hold-bg:#2E1A0C;--hold-b:#6B3C1A;
+  --nogo:#F87171;--nogo-bg:#2E1214;--nogo-b:#6E2A2A;
+  --done:#4ADE80;--done-bg:#0D2417;--done-b:#1F5A35;
+  --idle:#9FB3CC;--idle-bg:#121A27;--idle-b:#2A3648;
+  --q-bg:#140E08;--q-in:#0B0805;--q-ask:#E3C9A8;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+}
+/* Mission mode: the original flight-control palette. */
+body.mission{
   --go:#5EE6CF;--go-bg:#0E2A2A;--go-b:#1F5F5A;
   --hold:#FFC34D;--hold-bg:#2E2410;--hold-b:#6B5320;
   --nogo:#FF8A94;--nogo-bg:#2E1216;--nogo-b:#6E2630;
   --done:#9FB3CC;--done-bg:#121A27;--done-b:#2A3648;
-  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --q-bg:#141009;--q-in:#0B0905;--q-ask:#D9CBA8;
 }
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--fg);font:12.5px/1.45 var(--mono)}
@@ -25,33 +36,50 @@ button{font:inherit;cursor:pointer}
 .brand b{display:block;font-size:15px;letter-spacing:.08em;color:var(--hi)}
 .brand small{color:var(--muted);letter-spacing:.16em;font-size:10px}
 .clock{font-size:16px;font-weight:700;color:var(--accent)}
-.counts{display:flex;gap:6px}
+body:not(.mission) .clock{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.06em}
+.counts{display:flex;gap:6px;flex-wrap:wrap}
 .cnt{display:flex;flex-direction:column;align-items:center;min-width:48px;padding:4px 8px;border-radius:6px;border:1px solid}
-.cnt strong{font-size:16px}.cnt span{font-size:9px;letter-spacing:.16em}
+.cnt strong{font-size:16px}.cnt span{font-size:9px;letter-spacing:.16em;white-space:nowrap}
 .st-GO{color:var(--go);background:var(--go-bg);border-color:var(--go-b)}
 .st-HOLD{color:var(--hold);background:var(--hold-bg);border-color:var(--hold-b)}
 .st-NO-GO{color:var(--nogo);background:var(--nogo-bg);border-color:var(--nogo-b)}
-.st-DONE,.st-IDLE{color:var(--done);background:var(--done-bg);border-color:var(--done-b)}
+.st-DONE{color:var(--done);background:var(--done-bg);border-color:var(--done-b)}
+.st-IDLE{color:var(--idle);background:var(--idle-bg);border-color:var(--idle-b)}
 .iconbtn{min-width:44px;min-height:32px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
 .iconbtn.spin svg{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-section.box{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
-section.queue{border-color:var(--hold-b);background:#141009}
+.box{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+details.box{display:block}
+details.box>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.box>summary::-webkit-details-marker{display:none}
+details.box>summary h2::before{content:'▸ ';display:inline-block;width:1.2em}
+details.box[open]>summary h2::before{content:'▾ '}
+details.box[open]>summary{margin-bottom:8px}
+details.box>.body{display:flex;flex-direction:column;gap:8px}
+section.queue{border-color:var(--hold-b);background:var(--q-bg)}
 section.queue h2{color:var(--hold)}
-.q{display:flex;flex-direction:column;gap:6px;border-top:1px solid #2E2410;padding-top:8px}
+.q{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--hold-bg);padding-top:8px}
 .q:first-of-type{border-top:0;padding-top:0}
 .q .top{display:flex;justify-content:space-between;gap:8px}
-.q .who{font-weight:700;color:var(--hi)}
-.q .ask{color:#D9CBA8;word-break:break-word}
+.q .who{font-weight:700;color:var(--hi);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q .ask{color:var(--q-ask);word-break:break-word}
 .q form{display:flex;gap:6px}
-.q input{flex:1;min-width:0;min-height:34px;border-radius:6px;border:1px solid var(--hold-b);background:#0B0905;color:var(--hi);padding:0 8px;font:inherit}
-.q .send{border:0;border-radius:6px;background:var(--go);color:#06201C;font-weight:700;letter-spacing:.1em;padding:0 12px;min-height:34px}
+.q input{flex:1;min-width:0;min-height:34px;border-radius:6px;border:1px solid var(--hold-b);background:var(--q-in);color:var(--hi);padding:0 8px;font:inherit}
+.q .send{border:0;border-radius:6px;background:var(--go);color:#06141F;font-weight:700;letter-spacing:.1em;padding:0 12px;min-height:34px}
+body.mission .q .send{color:#06201C}
 .q .open{border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--fg);letter-spacing:.1em;padding:0 10px;min-height:34px}
+.hint{border:1px solid #25446E;border-radius:8px;background:#0B1626;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.hint b{color:var(--hi)}
+.hint ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px;color:#C6D2E1}
+.hint .ok{align-self:flex-start;min-height:28px;padding:0 12px;border-radius:6px;border:1px solid #25446E;background:transparent;color:var(--accent);letter-spacing:.1em}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
 .con{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--line);text-align:left;color:inherit;width:100%}
 .con:hover{border-color:#3C5677}
-.con .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.con .cs{font-weight:700;letter-spacing:.12em;color:var(--hi)}
-.pill{font-size:9.5px;font-weight:700;letter-spacing:.16em;padding:2px 6px;border-radius:4px;border:1px solid}
+.con .row{display:flex;justify-content:space-between;align-items:center;gap:6px;min-width:0}
+.con .cs{font-weight:700;letter-spacing:.12em;color:var(--hi);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body:not(.mission) .con .cs{letter-spacing:.02em}
+.pill{font-size:9.5px;font-weight:700;letter-spacing:.16em;padding:2px 6px;border-radius:4px;border:1px solid;white-space:nowrap;flex:0 0 auto}
+.chip{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:4px;background:#1A2434;color:#DCE6F2;border:1px solid #2A3648;margin-right:6px;vertical-align:1px}
 .con .t1{color:#C6D2E1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .con .t2{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .con svg{display:block;width:100%;height:30px;background:#0A101A;border-radius:4px}
@@ -64,8 +92,7 @@ section.queue h2{color:var(--hold)}
 .compact .con .cs-c,.compact .con .pill-c{display:inline-block}
 .con .cs-c,.con .pill-c{display:none}
 .compact .con .t1{flex:1 1 auto;min-width:0;color:var(--muted)}
-.deckbox{display:flex;flex-direction:column;gap:8px}
-.deckhdr{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.deckhdr{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0}
 .deckgrid{display:grid;gap:6px;max-width:300px}
 .deckkey{padding:0;border:1px solid var(--line);border-radius:8px;background:#0A0F18;overflow:hidden;aspect-ratio:1/1;cursor:pointer}
 .deckkey:hover{border-color:#3C5677}.deckkey:active{transform:scale(.96)}
@@ -75,7 +102,7 @@ section.queue h2{color:var(--hold)}
 .kv span{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
 .kv b{font-weight:500;color:#E6EDF6}
 .comm{display:flex;gap:8px;font-size:11.5px}
-.comm .t{color:var(--dim);flex:0 0 auto}.comm .w{font-weight:700;flex:0 0 auto}
+.comm .t{color:var(--dim);flex:0 0 auto}.comm .w{font-weight:700;flex:0 0 auto;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .comm .m{color:#C6D2E1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fuel{display:flex;flex-direction:column;gap:3px}
 .fuel .row{display:flex;justify-content:space-between;color:#C6D2E1}
@@ -93,42 +120,53 @@ section.queue h2{color:var(--hold)}
   <header class="hdr">
     <div class="brand">
       <svg aria-hidden="true" width="28" height="28" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--accent)"><circle cx="17" cy="17" r="15"/><circle cx="17" cy="17" r="8"/><path d="M17 2v6M17 26v6M2 17h6M26 17h6"/></svg>
-      <div><b>FLIGHTDECK</b><small>FLIGHT DIRECTOR VIEW</small></div>
+      <div><b>FLIGHTDECK</b><small id="subtitle">ORCA AGENTS</small></div>
     </div>
-    <div class="clock" id="clock" title="Time since Flightdeck started">T+ 00:00:00</div>
+    <div class="clock" id="clock" title="How long Flightdeck has been watching your agents">Session 0m</div>
     <div class="counts" id="counts" role="status" aria-live="polite"></div>
     <div style="display:flex;gap:6px;align-items:center">
     <span id="collapse-hint" class="note" hidden>Close this tab (⌘W) to return to the sidebar</span>
-    <button class="iconbtn" id="expand" aria-label="Expand to full-width mission room" title="Expand to full width"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
-    <button class="iconbtn" id="refresh" aria-label="Poll the room (refresh)"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    <button class="iconbtn" id="expand" aria-label="Open the full-width view in a tab" title="Open the full-width view in a tab"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+    <button class="iconbtn" id="refresh" aria-label="Refresh now" title="Refresh now"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
     </div>
   </header>
 
-  <section class="box deckbox" id="deck-box" aria-label="Stream Deck mirror">
-    <div class="deckhdr"><h2 id="deck-title">DECK</h2><span class="note" id="deck-state"></span></div>
-    <div class="deckgrid" id="deck"></div>
+  <section class="hint" id="hint" hidden aria-label="How Flightdeck works">
+    <b>How Flightdeck works</b>
+    <ul id="hint-list"></ul>
+    <button class="ok" id="hint-ok" type="button">GOT IT</button>
   </section>
 
   <section class="box queue" id="queue-box" hidden>
-    <h2 id="queue-title">AWAITING FLIGHT</h2>
+    <h2 id="queue-title" title="Agents waiting for your answer, and agents that failed">NEEDS YOU</h2>
     <div id="queue"></div>
   </section>
 
   <div class="cols">
     <div class="mainc">
-      <div class="conshdr"><h2 id="cons-title">CONSOLES</h2><button class="viewbtn" id="view-toggle" type="button" aria-pressed="false" aria-controls="consoles">COMPACT</button></div>
+      <div class="conshdr"><h2 id="cons-title" title="Every agent in every workspace. Click one to open its terminal.">AGENTS</h2><button class="viewbtn" id="view-toggle" type="button" aria-pressed="false" aria-controls="consoles">COMPACT</button></div>
+      <div class="legend" id="legend" aria-hidden="true"></div>
       <div class="grid" id="consoles"></div>
     </div>
-    <div class="side">
-      <section class="box">
-        <h2>COMMS LOOP</h2>
-        <div id="comms"></div>
-      </section>
-      <section class="box">
-        <h2>FUEL BURN · TODAY</h2>
-        <div id="fuel"></div>
-        <div class="note">Tokens from Orca's agent session history, sessions active today.</div>
-      </section>
+    <div class="side" id="side">
+      <details class="box" id="deck-box" data-fold="deck">
+        <summary title="On-screen keys: your agents on the first page, actions on the next. A Stream Deck is optional."><h2 id="deck-title">DECK</h2><span class="note" id="deck-state"></span></summary>
+        <div class="body">
+          <div class="deckgrid" id="deck"></div>
+          <div class="note" id="deck-help">Click a key to press it. Hold it or right-click to hold. The last key turns the page. Plug in a Stream Deck and the same keys appear on it.</div>
+        </div>
+      </details>
+      <details class="box" data-fold="activity">
+        <summary title="Every status change, newest first"><h2 id="comms-title">ACTIVITY</h2></summary>
+        <div class="body"><div id="comms"></div></div>
+      </details>
+      <details class="box" data-fold="fuel">
+        <summary title="Tokens used today, by agent kind"><h2 id="fuel-title">TOKENS TODAY</h2></summary>
+        <div class="body">
+          <div id="fuel"></div>
+          <div class="note">Tokens from Orca's agent session history, sessions active today.</div>
+        </div>
+      </details>
     </div>
   </div>
   <div id="error" class="err" hidden></div>
@@ -146,13 +184,38 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const compact = (n) => n == null ? '—' : n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'k' : String(n)
 const dur = (ms) => { const s = Math.floor(ms / 1000); if (s < 60) return s + 's'; const m = Math.floor(s / 60); if (m < 60) return m + 'm'; return Math.floor(m / 60) + 'h ' + (m % 60) + 'm' }
 const hms = (ms) => { const s = Math.floor(ms / 1000); const p = (n) => String(n).padStart(2, '0'); return `${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}` }
+const hm = (ms) => { const m = Math.floor(ms / 60000); return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm' }
 const hhmm = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-const COLOR = { GO: 'var(--go)', HOLD: 'var(--hold)', 'NO-GO': 'var(--nogo)', DONE: 'var(--done)', IDLE: 'var(--done)' }
+const COLOR = { GO: 'var(--go)', HOLD: 'var(--hold)', 'NO-GO': 'var(--nogo)', DONE: 'var(--done)', IDLE: 'var(--idle)' }
+
+// Words by mode. Plain is the default; Mission mode is a setting in Orca (Settings → Plugins → Flightdeck).
+const PLAIN = { GO: 'RUNNING', HOLD: 'NEEDS YOU', 'NO-GO': 'FAILED', DONE: 'DONE', IDLE: 'IDLE' }
+const TIP = { GO: 'Agents working right now', HOLD: 'Agents waiting for your answer or approval', 'NO-GO': 'Agents that stopped with an error', DONE: 'Agents that finished', IDLE: 'Agents with nothing to do' }
+let mission = false
+const word = (st) => mission ? st : PLAIN[st] ?? st
+const nameOf = (a) => mission ? a.callsign : a.workspace || a.project || a.agent || 'agent'
+const L = () => mission
+  ? { sub: 'FLIGHT DIRECTOR VIEW', queue: 'AWAITING FLIGHT', cons: (n) => `CONSOLES · ${n} ON LOOP`, comms: 'COMMS LOOP', fuel: 'FUEL BURN · TODAY', tokens: 'TOKENS', inState: 'IN STATE', empty: 'No agents on loop. Launch one in Orca and it reports in here.', quiet: 'Quiet loop.' }
+  : { sub: 'ORCA AGENTS', queue: 'NEEDS YOU', cons: (n) => `AGENTS · ${n}`, comms: 'ACTIVITY', fuel: 'TOKENS TODAY', tokens: 'TOKENS', inState: 'FOR', empty: 'No agents yet. Start one in Orca and it shows up here.', quiet: 'Nothing yet.' }
 
 async function request(name, input) {
   if (host?.plugin?.request) return host.plugin.request(name, input, { timeoutMs: 30000 })
   if (globalThis.__MC_PREVIEW__) return globalThis.__MC_PREVIEW__(name, input)
   throw new Error('Orca host is not available.')
+}
+
+// The plugin's own storage when Orca grants it, else this page's.
+async function readPref(key) {
+  try {
+    const r = await host?.storage?.get?.(key)
+    const v = r && typeof r === 'object' && 'value' in r ? r.value : r
+    if (v != null) return v
+  } catch (e) { console.warn('Flightdeck: storage read failed', e) }
+  try { return localStorage.getItem('mc.' + key) } catch { return null }
+}
+function savePref(key, v) {
+  try { const r = host?.storage?.set?.(key, v); r?.catch?.((e) => console.warn('Flightdeck: storage write failed', e)) } catch (e) { console.warn(e) }
+  try { localStorage.setItem('mc.' + key, v) } catch {}
 }
 
 function trace(points, status) {
@@ -162,57 +225,86 @@ function trace(points, status) {
   return `<svg aria-hidden="true" viewBox="0 0 120 30" preserveAspectRatio="none"><path d="M0 15H120" stroke="#1C2636" stroke-width=".5"/><polyline points="${d}" fill="none" stroke="${COLOR[status]}" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>`
 }
 
+function hintItems() {
+  const w = (s) => `<b>${esc(word(s))}</b>`
+  return [
+    `${w('HOLD')}: agents waiting for your answer. Type a reply and press SEND, or OPEN to go to its terminal.`,
+    `${mission ? '<b>Consoles</b>' : '<b>Agents</b>'}: every agent in every workspace, with its branch and status. Click one to open its terminal.`,
+    `Colours: ${['GO', 'HOLD', 'NO-GO', 'DONE'].map((s) => `<span style="color:${COLOR[s]}">${esc(word(s))}</span>`).join(' · ')}.`,
+    `<b>Deck</b> (${inEditor ? 'at the top' : 'folded below; click to open'}): on-screen keys for your agents and actions like RACE. A Stream Deck is optional.`
+  ].map((t) => `<li>${t}</li>`).join('')
+}
+
 function render() {
   if (!snap) return
+  mission = snap.mode === 'mission'
+  document.body.classList.toggle('mission', mission)
+  const l = L()
   $('app').setAttribute('aria-busy', 'false')
+  $('subtitle').textContent = l.sub
+  $('comms-title').textContent = l.comms
+  $('fuel-title').textContent = l.fuel
+  if (!$('hint').hidden) $('hint-list').innerHTML = hintItems()
   const c = snap.counts
-  $('counts').innerHTML = ['GO', 'HOLD', 'NO-GO'].map((k) => `<div class="cnt st-${k}"><strong>${c[k]}</strong><span>${k}</span></div>`).join('')
-  $('cons-title').textContent = `CONSOLES · ${snap.consoles.length} ON LOOP`
+  $('counts').innerHTML = ['GO', 'HOLD', 'NO-GO'].map((k) => `<div class="cnt st-${k}" title="${esc(TIP[k])}"><strong>${c[k]}</strong><span>${esc(word(k))}</span></div>`).join('')
+  $('cons-title').textContent = l.cons(snap.consoles.length)
+  $('legend').innerHTML = mission ? '' : ['GO', 'HOLD', 'NO-GO', 'DONE'].map((s) => `<span title="${esc(TIP[s])}"><span class="dot" style="background:${COLOR[s]}"></span>${esc(PLAIN[s].toLowerCase())}</span>`).join('')
+  $('legend').hidden = mission
 
   // Queue: keep any reply the person is typing across re-renders.
   const q = snap.queue
   $('queue-box').hidden = q.length === 0
-  $('queue-title').textContent = `AWAITING FLIGHT · ${q.length}`
+  $('queue-title').textContent = `${l.queue} · ${q.length}`
   const focused = document.activeElement?.dataset?.key
   $('queue').innerHTML = q.map((a) => `
     <div class="q">
-      <div class="top"><span class="who">${esc(a.callsign)} · ${esc(a.workspace || a.agent || '')}</span><span class="pill st-${a.status}">${a.status} ${dur(a.inStateMs)}</span></div>
+      <div class="top"><span class="who">${mission ? `${esc(a.callsign)} · ${esc(a.workspace || a.agent || '')}` : `${esc(nameOf(a))}${a.agent && a.agent !== nameOf(a) ? ' · ' + esc(a.agent) : ''}`}</span><span class="pill st-${a.status}">${esc(word(a.status))} ${dur(a.inStateMs)}</span></div>
       <div class="ask">${esc(a.title || a.task || 'Waiting for input')}</div>
       ${a.terminalId ? `<form data-key="${esc(a.key)}" data-term="${esc(a.terminalId)}">
-        <input id="r-${esc(a.key)}" data-key="${esc(a.key)}" aria-label="Reply to ${esc(a.callsign)}" placeholder="Reply…" autocomplete="off" value="${esc(drafts.get(a.key) || '')}">
+        <input id="r-${esc(a.key)}" data-key="${esc(a.key)}" aria-label="Reply to ${esc(nameOf(a))}" placeholder="Reply…" autocomplete="off" value="${esc(drafts.get(a.key) || '')}">
         <button class="send" type="submit">SEND</button>
-        <button class="open" type="button" data-open="${esc(a.terminalId)}">OPEN</button>
+        <button class="open" type="button" data-open="${esc(a.terminalId)}" title="Open this agent's terminal">OPEN</button>
       </form>` : ''}
     </div>`).join('')
   if (focused) { const el = $('r-' + focused); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) } }
 
-  $('consoles').innerHTML = snap.consoles.length ? snap.consoles.map((a) => `
-    <button class="con" ${a.terminalId ? `data-open="${esc(a.terminalId)}"` : 'disabled'} style="box-shadow:inset 3px 0 0 ${COLOR[a.status]}" aria-label="${esc(a.callsign)}, ${a.status}. Open terminal">
-      <span class="cs cs-c">${esc(a.callsign)}</span>
-      <span class="row"><span class="cs">${esc(a.callsign)}</span><span class="pill st-${a.status}">${a.status}</span></span>
-      <span class="t1">${esc(a.workspace || a.project || 'unassigned')}</span>
-      <span class="t2">${esc(a.agent || 'agent')}${a.branch ? ' · ' + esc(a.branch) : ''}</span>
+  $('consoles').innerHTML = snap.consoles.length ? snap.consoles.map((a) => {
+    const name = nameOf(a)
+    // Plain: workspace on top, then agent kind and branch. Mission: callsign on top, as before.
+    const line1 = mission ? esc(a.workspace || a.project || 'unassigned') : `<span class="chip">${esc(a.agent || 'agent')}</span>${esc(a.branch || 'no branch')}`
+    const line2 = mission ? `${esc(a.agent || 'agent')}${a.branch ? ' · ' + esc(a.branch) : ''}` : ''
+    return `
+    <button class="con" ${a.terminalId ? `data-open="${esc(a.terminalId)}"` : 'disabled'} style="box-shadow:inset 3px 0 0 ${COLOR[a.status]}" aria-label="${esc(name)}, ${esc(word(a.status))}. Open terminal" title="Open ${esc(name)}'s terminal">
+      <span class="cs cs-c">${esc(name)}</span>
+      <span class="row"><span class="cs">${esc(name)}</span><span class="pill st-${a.status}">${esc(word(a.status))}</span></span>
+      <span class="t1">${line1}</span>
+      ${line2 ? `<span class="t2">${line2}</span>` : ''}
       ${trace(a.trace, a.status)}
-      <span class="kv"><span><span>TOKENS</span><b>${compact(a.tokens)}</b></span><span><span>IN STATE</span><b>${dur(a.inStateMs)}</b></span></span>
+      <span class="kv"><span><span>${l.tokens}</span><b>${compact(a.tokens)}</b></span><span><span>${l.inState}</span><b>${dur(a.inStateMs)}</b></span></span>
       <span class="t2">&gt; ${esc(a.title || a.task || '—')}</span>
-      <span class="pill pill-c st-${a.status}">${a.status}</span>
-    </button>`).join('') : '<div class="empty">No agents on loop. Launch one in Orca and it reports in here.</div>'
+      <span class="pill pill-c st-${a.status}">${esc(word(a.status))}</span>
+    </button>`
+  }).join('') : `<div class="empty">${esc(l.empty)}</div>`
 
   const d = snap.deck
   if (d) {
-    $('deck-title').textContent = `DECK · ${String(d.page).toUpperCase()}`
+    const page = d.page === 'home' ? (mission ? 'HOME' : 'AGENTS') : String(d.page).toUpperCase()
+    $('deck-title').textContent = `DECK · ${page}`
     $('deck-state').innerHTML = `<span class="dot" style="background:${d.connected ? 'var(--go)' : 'var(--dim)'}"></span>${d.connected ? esc(d.model || 'connected') : 'on screen · ' + esc(d.screen || 'no deck')}`
     $('deck').style.gridTemplateColumns = `repeat(${d.cols || 3}, minmax(0, 1fr))`
     $('deck').style.maxWidth = `${(d.cols || 3) * ((d.cols || 3) <= 3 ? 100 : (d.cols || 3) <= 5 ? 84 : 68)}px`
     $('deck').innerHTML = d.keys.map((svg, i) => `<button class="deckkey" data-deck="${i}" aria-label="Deck key ${i + 1}: ${esc(d.labels?.[i] || 'empty')}"><img alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}"></button>`).join('')
   }
 
-  $('comms').innerHTML = snap.comms.length ? snap.comms.map((m) => `
-    <div class="comm"><span class="t">${hhmm(m.t)}</span><span class="w" style="color:${COLOR[m.status]}">${esc(m.who)}</span><span class="m" title="${esc(m.msg)}">${esc(m.msg)}</span></div>`).join('') : '<div class="note">Quiet loop.</div>'
+  $('comms').innerHTML = snap.comms.length ? snap.comms.map((m) => {
+    const msg = mission ? m.msg : m.text ?? m.msg
+    return `<div class="comm"><span class="t">${hhmm(m.t)}</span><span class="w" style="color:${COLOR[m.status]}">${esc(mission ? m.who : m.name ?? m.who)}</span><span class="m" title="${esc(msg)}">${esc(msg)}</span></div>`
+  }).join('') : `<div class="note">${esc(l.quiet)}</div>`
 
   const max = Math.max(1, ...snap.fuel.map((f) => f.tokens))
   $('fuel').innerHTML = snap.fuel.length ? snap.fuel.map((f) => `
     <div class="fuel"><div class="row"><span>${esc(f.agent)}</span><span>${compact(f.tokens)}</span></div><div class="bar"><i style="width:${Math.round(f.tokens / max * 100)}%"></i></div></div>`).join('') : '<div class="note">No sessions today yet.</div>'
+  tickClock()
 }
 
 async function load(kind = 'mc.snapshot') {
@@ -221,6 +313,7 @@ async function load(kind = 'mc.snapshot') {
   $('refresh').classList.add('spin')
   try {
     snap = await request(kind)
+    base = { at: Date.now() }
     $('error').hidden = true
     render()
   } catch (e) {
@@ -280,37 +373,47 @@ document.addEventListener('submit', async (ev) => {
 })
 $('refresh').addEventListener('click', () => load('mc.refresh'))
 
-// Compact view: one line per agent. Remembered in the plugin's own storage when Orca grants it.
+// editor/index.html (the full-width tab) sets __MC_EDITOR; the sidebar panel does not.
+const inEditor = globalThis.__MC_EDITOR === true
+
+// Compact view: one line per agent. The sidebar starts compact, the full-width tab expanded.
 const VIEW_KEY = 'consolesView'
-let compactView = false
+let compactView = !inEditor
 function applyView() {
   const b = $('view-toggle')
   b.textContent = compactView ? 'EXPANDED' : 'COMPACT'
   b.setAttribute('aria-pressed', String(compactView))
-  b.title = compactView ? 'Show full console cards' : 'One line per agent'
+  b.title = compactView ? 'Show full agent cards' : 'One line per agent'
   $('consoles').classList.toggle('compact', compactView)
 }
-async function readView() {
-  try {
-    const r = await host?.storage?.get?.(VIEW_KEY)
-    const v = r && typeof r === 'object' && 'value' in r ? r.value : r
-    if (v === 'compact' || v === 'expanded') return v
-  } catch (e) { console.warn('Flightdeck: storage read failed', e) }
-  try { return localStorage.getItem('mc.' + VIEW_KEY) } catch { return null }
-}
-function saveView(v) {
-  try { const r = host?.storage?.set?.(VIEW_KEY, v); r?.catch?.((e) => console.warn('Flightdeck: storage write failed', e)) } catch (e) { console.warn(e) }
-  try { localStorage.setItem('mc.' + VIEW_KEY, v) } catch {}
-}
-$('view-toggle').addEventListener('click', () => { compactView = !compactView; applyView(); saveView(compactView ? 'compact' : 'expanded') })
-readView().then((v) => { if (v) { compactView = v === 'compact'; applyView() } })
+$('view-toggle').addEventListener('click', () => { compactView = !compactView; applyView(); savePref(VIEW_KEY, compactView ? 'compact' : 'expanded') })
+applyView()
+readPref(VIEW_KEY).then((v) => { if (v === 'compact' || v === 'expanded') { compactView = v === 'compact'; applyView() } })
 
-// editor/index.html (the full-width tab) sets __MC_EDITOR; the sidebar panel does not.
-const inEditor = globalThis.__MC_EDITOR === true
+// Folded sections (deck, activity, tokens): folded in the sidebar, open in the full-width tab,
+// then whatever the person last chose.
+for (const el of document.querySelectorAll('details[data-fold]')) {
+  const key = 'fold.' + el.dataset.fold + (inEditor ? '.room' : '')
+  el.open = inEditor
+  readPref(key).then((v) => { if (v === 'open' || v === 'closed') el.open = v === 'open' })
+  el.addEventListener('toggle', () => savePref(key, el.open ? 'open' : 'closed'))
+}
+
+// First run: a short explanation until the person dismisses it.
+readPref('hintDismissed').then((v) => {
+  if (v === 'yes') return
+  $('hint').hidden = false
+  $('hint-list').innerHTML = hintItems()
+})
+$('hint-ok').addEventListener('click', () => { $('hint').hidden = true; savePref('hintDismissed', 'yes') })
+
 if (inEditor) {
+  // The full-width room: the deck goes up top, open, like the hardware on a desk.
+  const deckBox = $('deck-box')
+  $('app').insertBefore(deckBox, $('queue-box'))
   $('expand').hidden = true
   $('collapse-hint').hidden = false
-  host.document.session?.().catch?.(() => {})
+  host?.document?.session?.().catch?.(() => {})
   setInterval(() => load(), 3000)
 }
 $('expand').addEventListener('click', async () => {
@@ -320,11 +423,17 @@ $('expand').addEventListener('click', async () => {
 
 // Local clock between snapshots.
 let base = { at: Date.now() }
-setInterval(() => { if (snap) $('clock').textContent = 'T+ ' + hms(snap.elapsedMs + (Date.now() - base.at)) }, 1000)
+function tickClock() {
+  if (!snap) return
+  const ms = snap.elapsedMs + (Date.now() - base.at)
+  $('clock').textContent = mission ? 'T+ ' + hms(ms) : 'Session ' + hm(ms)
+  $('clock').title = mission ? 'Mission elapsed time: how long Flightdeck has been watching' : 'How long Flightdeck has been watching your agents'
+}
+setInterval(tickClock, 1000)
 const onSnap = (s) => { snap = s; base = { at: Date.now() }; render() }
 
 host?.plugin?.on?.('mc.changed', onSnap)
-load().then(() => { base = { at: Date.now() } })
+load()
 })()
 </script>
 </body>

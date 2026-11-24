@@ -32,7 +32,9 @@ test('fleet assigns stable callsigns and logs transitions', () => {
   assert.equal(s.counts.HOLD, 1);
   assert.equal(s.queue.length, 1);
   assert.equal(s.consoles[0].key, 'a', 'HOLD sorts first');
-  assert.match(s.comms[0].msg, /holding/);
+  assert.match(s.comms[0].msg, /holding/, 'mission wording');
+  assert.match(s.comms[0].text, /^needs you: /, 'plain wording');
+  assert.equal(f.displayName('a'), 'agent', 'no workspace or agent kind known yet');
 });
 
 test('syncWorkspace drops agents that left', () => {
@@ -52,17 +54,19 @@ test('tokens come from session history', () => {
 });
 
 test('status bar text and tone', () => {
-  assert.deepEqual(statusBarText({ GO: 2, HOLD: 1, 'NO-GO': 0 }), { text: 'GO 2 · HOLD 1', tone: 'warning' });
+  assert.deepEqual(statusBarText({ GO: 2, HOLD: 1, 'NO-GO': 0 }), { text: 'Running 2 · Needs you 1', tone: 'warning' });
+  assert.deepEqual(statusBarText({ GO: 2, HOLD: 1, 'NO-GO': 0 }, { mission: true }), { text: 'GO 2 · HOLD 1', tone: 'warning' });
+  assert.equal(statusBarText({ GO: 0, HOLD: 0, 'NO-GO': 2 }).text, 'Running 0 · Failed 2');
   assert.equal(statusBarText({ GO: 1, HOLD: 0, 'NO-GO': 1 }).tone, 'danger');
 });
 
-function fakeOrca(minor = 10) {
+function fakeOrca(minor = 10, settings = { notify: true }) {
   const calls = [];
   const handlers = new Map();
   const posts = [];
   let listener = null;
   const answers = {
-    'settings.get': { settings: { notify: true } },
+    'settings.get': { settings },
     'workspace.list': { workspaces: [{ id: 'w1', name: 'hyprReach', branch: 'main', status: { state: 'active', terminalCount: 1 } }, { id: 'w2', name: 'idle', branch: 'x', status: { state: 'inactive', terminalCount: 0 } }], truncated: false },
     'agents.list': { agents: [{ terminalId: 't1', title: 'Rendering pages', agent: 'claude', state: 'working', stateStartedAt: Date.now(), sessionId: 's1' }] },
     'agent.listSessions': { sessions: [{ sessionId: 's1', agent: 'claude', totalTokens: 1234, updatedAt: Date.now() }], truncated: false },
@@ -84,21 +88,42 @@ function fakeOrca(minor = 10) {
 test('worker polls, posts, updates status bar, notifies on HOLD', async () => {
   const orca = fakeOrca();
   const w = startWorker(orca, { pollMs: 1e9 });
-  await w.ready;
-  const listed = orca.calls.filter(([n]) => n === 'agents.list');
-  assert.equal(listed.length, 1, 'only live workspaces are listed');
-  assert.deepEqual(listed[0][1], { workspaceId: 'w1' });
-  const snap = orca.posts.at(-1)[1];
-  assert.equal(snap.consoles[0].tokens, 1234);
-  assert.ok(orca.calls.some(([n, p]) => n === 'statusBar.update' && p.text === 'GO 1'));
-  orca.fire({ workspaceId: 'w1', workspaceListId: 'w1', paneKey: 'p', terminalId: 't1', state: 'blocked', receivedAt: Date.now() });
-  await new Promise((r) => setTimeout(r, 300));
-  assert.ok(orca.calls.some(([n, p]) => n === 'notifications.show' && /FIDO needs Flight/.test(p.title)));
-  assert.equal(orca.posts.at(-1)[1].counts.HOLD, 1);
-  assert.deepEqual(await orca.handlers.get('mc.reply')({ terminalId: 't1', text: 'yes' }), { accepted: true });
-  assert.ok(orca.calls.some(([n, p]) => n === 'terminal.sendText' && p.enter === true && p.text === 'yes'));
-  await assert.rejects(() => orca.handlers.get('mc.reply')({ terminalId: 't1', text: '' }));
-  w.stop();
+  try {
+    await w.ready;
+    const listed = orca.calls.filter(([n]) => n === 'agents.list');
+    assert.equal(listed.length, 1, 'only live workspaces are listed');
+    assert.deepEqual(listed[0][1], { workspaceId: 'w1' });
+    const snap = orca.posts.at(-1)[1];
+    assert.equal(snap.consoles[0].tokens, 1234);
+    assert.equal(snap.mode, 'plain', 'plain words by default');
+    assert.ok(orca.calls.some(([n, p]) => n === 'statusBar.update' && p.text === 'Running 1'));
+    orca.fire({ workspaceId: 'w1', workspaceListId: 'w1', paneKey: 'p', terminalId: 't1', state: 'blocked', receivedAt: Date.now() });
+    await new Promise((r) => setTimeout(r, 300));
+    assert.ok(orca.calls.some(([n, p]) => n === 'notifications.show' && p.title === 'hyprReach needs you'));
+    assert.equal(orca.posts.at(-1)[1].counts.HOLD, 1);
+    assert.deepEqual(await orca.handlers.get('mc.reply')({ terminalId: 't1', text: 'yes' }), { accepted: true });
+    assert.ok(orca.calls.some(([n, p]) => n === 'terminal.sendText' && p.enter === true && p.text === 'yes'));
+    await assert.rejects(() => orca.handlers.get('mc.reply')({ terminalId: 't1', text: '' }));
+  } finally {
+    w.stop();
+  }
+});
+
+test('Mission mode setting: GO / HOLD wording, callsigns in notifications and on keys', async () => {
+  const orca = fakeOrca(10, { notify: true, mission: true });
+  const w = startWorker(orca, { pollMs: 1e9 });
+  try {
+    await w.ready;
+    const snap = orca.posts.at(-1)[1];
+    assert.equal(snap.mode, 'mission');
+    assert.equal(snap.deck.labels[0], 'FIDO');
+    assert.ok(orca.calls.some(([n, p]) => n === 'statusBar.update' && p.text === 'GO 1'));
+    orca.fire({ workspaceId: 'w1', workspaceListId: 'w1', paneKey: 'p', terminalId: 't1', state: 'blocked', receivedAt: Date.now() });
+    await new Promise((r) => setTimeout(r, 300));
+    assert.ok(orca.calls.some(([n, p]) => n === 'notifications.show' && p.title === 'FIDO needs Flight'));
+  } finally {
+    w.stop();
+  }
 });
 
 test('older Orca falls back to the focused workspace', async () => {

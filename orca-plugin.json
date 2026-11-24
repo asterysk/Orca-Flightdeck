@@ -58,6 +58,12 @@
         "default": true
       },
       {
+        "key": "mission",
+        "title": "Mission mode: space-flight wording (GO / HOLD / NO-GO) and callsigns instead of plain words",
+        "type": "boolean",
+        "default": false
+      },
+      {
         "key": "deck",
         "title": "Stream Deck link (lets the optional deck helper connect on this Mac)",
         "type": "boolean",

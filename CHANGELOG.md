@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased · plain words by default
+
+From first-user feedback: a new user should understand the screen in seconds, without the flight-control vocabulary.
+
+- **Plain words by default:** Running / Needs you / Failed / Done instead of GO / HOLD / NO-GO. Sections are **Agents**, **Needs you**, **Activity** and **Tokens today**, and the clock reads `Session 3h 12m` instead of `T+`. The status bar and desktop alerts use the same words.
+- **Agents named by what they are:** workspace, agent kind and branch. No callsigns.
+- **Colour means status everywhere:** blue running, orange needs you, red failed, green done, on counts, cards and deck keys. Deck keys show the workspace and agent. When two keys share a workspace, they show the branch.
+- **Simpler sidebar:** counts, Needs you and one line per agent. Deck, Activity and Tokens fold away and remember your choice. The full-width view keeps everything open, with the deck on top.
+- **First-run help:** a short "How Flightdeck works" card with a colour legend (dismiss with GOT IT), plus hover tips on counts and sections, and a one-line how-to under the deck.
+- **Mission mode** (new setting, off by default): the original GO / HOLD / NO-GO wording, callsigns, per-agent key colours and `T+` clock.
+- The demo deck's ANSWER key reads "needs you".
+- Tests: a failing worker test no longer leaves the run hanging (`--test-force-exit`, `try/finally`).
+- `scripts/deck-pages.mjs` draws the README's deck pages picture from the real key renderer. README and screenshots updated.
+
 ## 0.5.1 · 2026-11-24 · security fixes
 
 - **EXPAND** no longer follows symlinks: a repo that plants a `.flightdeck` link (or a link inside it) is refused instead of having the link's target overwritten.

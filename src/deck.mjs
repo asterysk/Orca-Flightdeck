@@ -6,9 +6,19 @@
 // hold = straight home to the agents page.
 
 import { buildConfig, DEFAULT_DECK_VRX } from './deckconfig.mjs';
-import { CALLSIGNS } from './fleet.mjs';
+import { CALLSIGNS, PLAIN_STATUS } from './fleet.mjs';
 
+// Plain mode (the default): colour means status, the same four colours everywhere.
 export const STATUS_COLORS = {
+  GO: '#60A5FA', // running: blue
+  HOLD: '#FB923C', // needs you: orange
+  'NO-GO': '#F87171', // failed: red
+  DONE: '#4ADE80', // done: green
+  IDLE: '#9FB3CC'
+};
+
+// Mission mode keeps the original look: status in the band, one colour per agent above it.
+export const MISSION_STATUS_COLORS = {
   GO: '#5EE6CF',
   HOLD: '#FFC34D',
   'NO-GO': '#FF5D6C',
@@ -16,7 +26,7 @@ export const STATUS_COLORS = {
   IDLE: '#9FB3CC'
 };
 
-// One colour per agent key, so the room can tell the five apart at a glance.
+// Mission mode only: one colour per agent key, so the room can tell the five apart at a glance.
 // Kept clear of the GO / HOLD / NO-GO colours, which live in the status band.
 export const AGENT_COLORS = ['#8B7CFF', '#38BDF8', '#F472B6', '#A3E635', '#FB923C'];
 
@@ -35,28 +45,35 @@ const clip = (s, n) => {
 
 const FONT = 'Menlo, SF Mono, DejaVu Sans Mono, monospace';
 
-// Stable order for agent keys: the order Flightdeck first saw them (callsign order),
-// so a key keeps its agent and its colour while statuses change.
+// Stable order for agent keys: the order Flightdeck first saw them (callsigns are handed out
+// in that order, even when they are not shown), so a key keeps its place while statuses change.
 export function callsignRank(callsign) {
   const [base, n] = String(callsign ?? '').split('-');
   const i = CALLSIGNS.indexOf(base);
   return (i < 0 ? 999 : i) + (Number(n) > 1 ? (Number(n) - 1) * CALLSIGNS.length : 0);
 }
 
+// Callsigns fit at 19; longer names (workspaces) shrink so up to 12 characters still fit the key.
+const labelSize = (label) => {
+  const n = Math.min(12, String(label ?? '').length);
+  return n <= 7 ? 19 : n <= 9 ? 15 : 13;
+};
+
 // One key face. Drawn on a 100×100 grid and scaled by the viewBox, so any key size works.
 export function keySvg(face, size = 80) {
   const color = face.color ?? DIM;
   const parts = [`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100">`];
   if (face.kind === 'agent') {
-    const st = STATUS_COLORS[face.status] ?? DIM;
+    const st = face.stColor ?? STATUS_COLORS[face.status] ?? DIM;
     const alarm = face.status === 'HOLD' || face.status === 'NO-GO';
     const lit = alarm && face.phase; // pulse: band fills with the status colour every other beat
+    const word = String(face.statusText ?? face.status);
     parts.push(
       `<rect width="100" height="100" fill="${color}"/>`,
-      `<text x="50" y="34" font-family="${FONT}" font-size="19" font-weight="700" fill="${INK}" text-anchor="middle">${esc(clip(face.label, 7))}</text>`,
+      `<text x="50" y="34" font-family="${FONT}" font-size="${labelSize(face.label)}" font-weight="700" fill="${INK}" text-anchor="middle">${esc(clip(face.label, 12))}</text>`,
       `<text x="50" y="54" font-family="${FONT}" font-size="12" font-weight="700" fill="${INK}" fill-opacity="0.75" text-anchor="middle">${esc(clip(face.sub, 12))}</text>`,
       `<rect x="0" y="66" width="100" height="34" fill="${lit ? st : INK}"/>`,
-      `<text x="50" y="89" font-family="${FONT}" font-size="15" font-weight="700" fill="${lit ? INK : st}" text-anchor="middle">${esc(face.status)}</text>`
+      `<text x="50" y="89" font-family="${FONT}" font-size="${word.length > 7 ? 13 : 15}" font-weight="700" fill="${lit ? INK : st}" text-anchor="middle">${esc(word)}</text>`
     );
     if (alarm) parts.push(`<rect x="2" y="2" width="96" height="96" fill="none" stroke="${lit ? st : INK}" stroke-width="4"/>`);
   } else if (face.kind === 'empty') {
@@ -135,7 +152,7 @@ export function createDeck({ keys = 6, config = buildConfig(DEFAULT_DECK_VRX), n
     return out;
   }
 
-  function faces(snapshot, phase) {
+  function faces(snapshot, phase, mission) {
     const slots = Math.max(1, count - 1); // the last key is always the page key
     if (page !== 'home' && !cfg.pages[page]) page = 'home';
     let out;
@@ -144,13 +161,23 @@ export function createDeck({ keys = 6, config = buildConfig(DEFAULT_DECK_VRX), n
         .sort((a, b) => callsignRank(a.callsign) - callsignRank(b.callsign))
         .map((a, i) => ({
           kind: 'agent',
-          label: a.callsign,
-          sub: a.workspace || a.agent || '',
+          // Plain: the workspace on top, the agent kind under it, the key in its status colour.
+          label: mission ? a.callsign : a.workspace || a.project || a.agent || 'agent',
+          sub: mission ? a.workspace || a.agent || '' : a.workspace || a.project ? a.agent || '' : '',
           status: a.status,
+          statusText: mission ? a.status : (PLAIN_STATUS[a.status] ?? a.status).toUpperCase(),
+          stColor: (mission ? MISSION_STATUS_COLORS : STATUS_COLORS)[a.status],
+          branch: a.branch ?? null,
           phase,
-          color: AGENT_COLORS[i % AGENT_COLORS.length],
+          color: mission ? AGENT_COLORS[i % AGENT_COLORS.length] : STATUS_COLORS[a.status],
           action: a.terminalId ? { type: 'focus', terminalId: a.terminalId } : { type: 'none' }
         }));
+      // Two keys with the same name (two agents in one workspace): show the branch under it instead.
+      if (!mission) {
+        const seen = new Map();
+        for (const k of agents) seen.set(k.label, (seen.get(k.label) ?? 0) + 1);
+        agents.forEach((k) => { if (seen.get(k.label) > 1 && k.branch) k.sub = k.branch; });
+      }
       out = agents.length ? paginate(agents, slots, false) : paginate([{ kind: 'empty', label: 'no agents', action: { type: 'none' } }], slots, false);
     } else {
       const items = cfg.pages[page].keys.map((k) => {
@@ -206,8 +233,8 @@ export function createDeck({ keys = 6, config = buildConfig(DEFAULT_DECK_VRX), n
     },
     // What every client should show now: one SVG per key, plus the page name.
     // `phase` flips on a timer so HOLD / NO-GO keys pulse.
-    render(snapshot, size = 80, { phase = false } = {}) {
-      const fs = faces(snapshot, phase);
+    render(snapshot, size = 80, { phase = false, mission = false } = {}) {
+      const fs = faces(snapshot, phase, mission);
       lastFaces = fs;
       actions = fs.map((f) => f.action);
       return { page, keys: fs.map((f) => keySvg(f, size)), labels: fs.map((f) => f.label ?? ''), errors: cfg.errors ?? [] };

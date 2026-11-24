@@ -84,11 +84,15 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
   let timer = null;
   let postTimer = null;
   let notifyOn = true;
+  let mission = false; // Mission mode: GO / HOLD / NO-GO wording and callsigns (off = plain words)
 
   async function readSettings() {
     const s = (await call('settings.get'))?.settings ?? {};
     notifyOn = s.notify !== false;
+    mission = s.mission === true;
   }
+  // Who an agent is, in the current mode's words.
+  const nameFor = (c) => (mission ? c.callsign : c.workspace || c.project || c.agent || 'agent');
 
   async function refresh() {
     const ws = await call('workspace.list', { includeStatus: true });
@@ -122,7 +126,8 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
   // Fleet snapshot plus the deck's current face, so the panel can mirror the hardware keys.
   function fullSnapshot() {
     const snap = fleet.snapshot();
-    const face = deck.render(snap, 80, { phase });
+    snap.mode = mission ? 'mission' : 'plain';
+    const face = deck.render(snap, 80, { phase, mission });
     snap.deck = {
       ...face,
       cols: deckDevice?.cols ?? screenGrid().cols,
@@ -144,14 +149,16 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
       orca.log(`Flightdeck: post failed: ${e?.message ?? e}`);
     }
     if (statusBar) {
-      const sb = statusBarText(snap.counts);
-      call('statusBar.update', { id: STATUS_ID, text: sb.text, tone: sb.tone, tooltip: 'Flightdeck: agents GO / HOLD / NO-GO' });
+      const sb = statusBarText(snap.counts, { mission });
+      const tooltip = mission ? 'Flightdeck: agents GO / HOLD / NO-GO' : 'Flightdeck: agents running, needing you, failed';
+      call('statusBar.update', { id: STATUS_ID, text: sb.text, tone: sb.tone, tooltip });
     }
     return snap;
   }
 
   async function tick() {
     if (stopped) return;
+    await readSettings(); // picks up a Mission mode switch within one poll
     await refresh();
     fleet.sample();
     publish();
@@ -167,10 +174,11 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
     if (!r) return;
     if (r.changed && notifyOn && (r.console.status === 'HOLD' || r.console.status === 'NO-GO')) {
       const what = r.console.title || r.console.agent || 'An agent';
-      call('notifications.show', {
-        title: `${r.console.callsign} ${r.console.status === 'HOLD' ? 'needs Flight' : 'is NO-GO'}`,
-        body: what
-      });
+      const hold = r.console.status === 'HOLD';
+      const title = mission
+        ? `${r.console.callsign} ${hold ? 'needs Flight' : 'is NO-GO'}`
+        : `${fleet.displayName(r.console.key)} ${hold ? 'needs you' : 'failed'}`;
+      call('notifications.show', { title, body: what });
     }
     schedulePost();
   }
@@ -455,7 +463,7 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
     const text = String(action.text ?? '1');
     if (!(armed && armed.terminalId === c.terminalId && now() <= armed.until)) {
       armed = { terminalId: c.terminalId, until: now() + CONFIRM_MS };
-      tell(`ANSWER ${c.callsign}: press again to send "${text}"`, c.title || c.task || 'Waiting for input');
+      tell(`ANSWER ${nameFor(c)}: press again to send "${text}"`, c.title || c.task || 'Waiting for input');
       return;
     }
     armed = null;

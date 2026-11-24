@@ -6,6 +6,10 @@ export const CALLSIGNS = [
   'TELMU', 'BOOSTER', 'FAO', 'PAO', 'EGIL', 'NETWORK', 'PROCEDURES', 'CONTROL'
 ];
 
+// Plain words for each status (the default). Mission mode shows the codes themselves.
+export const PLAIN_STATUS = { GO: 'Running', HOLD: 'Needs you', 'NO-GO': 'Failed', DONE: 'Done', IDLE: 'Idle' };
+export const statusWord = (status, mission = false) => (mission ? status : PLAIN_STATUS[status] ?? status);
+
 const TRACE_LEN = 24;
 const COMMS_LEN = 60;
 
@@ -42,8 +46,15 @@ export function createFleet({ now = () => Date.now() } = {}) {
     return callsigns.get(key);
   }
 
-  function log(c, msg) {
-    comms.unshift({ t: now(), who: c.callsign, status: c.status, msg });
+  // Name a person recognises: the workspace, else the agent kind.
+  function nameOf(c) {
+    const ws = c.workspaceId ? workspaces.get(c.workspaceId) : null;
+    return ws?.name || ws?.project || c.agent || 'agent';
+  }
+
+  // Each entry carries both wordings; the panel picks one by mode.
+  function log(c, from) {
+    comms.unshift({ t: now(), who: c.callsign, name: nameOf(c), status: c.status, msg: describe(c, from), text: plainText(c, from) });
     if (comms.length > COMMS_LEN) comms.length = COMMS_LEN;
   }
 
@@ -76,7 +87,7 @@ export function createFleet({ now = () => Date.now() } = {}) {
     c.status = status;
     consoles.set(key, c);
     const changed = from !== status;
-    if (changed) log(c, describe(c, from));
+    if (changed) log(c, from);
     return { console: c, changed, from };
   }
 
@@ -87,6 +98,17 @@ export function createFleet({ now = () => Date.now() } = {}) {
       case 'HOLD': return `holding, needs Flight: ${what}`;
       case 'NO-GO': return `failed: ${what}`;
       case 'DONE': return `complete: ${what}`;
+      default: return `idle: ${what}`;
+    }
+  }
+
+  function plainText(c, from) {
+    const what = c.title || c.agent || 'agent';
+    switch (c.status) {
+      case 'GO': return from ? `running again: ${what}` : `running: ${what}`;
+      case 'HOLD': return `needs you: ${what}`;
+      case 'NO-GO': return `failed: ${what}`;
+      case 'DONE': return `done: ${what}`;
       default: return `idle: ${what}`;
     }
   }
@@ -176,13 +198,19 @@ export function createFleet({ now = () => Date.now() } = {}) {
     };
   }
 
-  return { upsert, syncWorkspace, setWorkspaces, setSessions, sample, snapshot, forget };
+  function displayName(key) {
+    const c = consoles.get(key);
+    return c ? nameOf(c) : 'agent';
+  }
+
+  return { upsert, syncWorkspace, setWorkspaces, setSessions, sample, snapshot, forget, displayName };
 }
 
-export function statusBarText(counts) {
-  const parts = [`GO ${counts.GO}`];
-  if (counts.HOLD) parts.push(`HOLD ${counts.HOLD}`);
-  if (counts['NO-GO']) parts.push(`NO-GO ${counts['NO-GO']}`);
+export function statusBarText(counts, { mission = false } = {}) {
+  const w = (k) => statusWord(k, mission);
+  const parts = [`${w('GO')} ${counts.GO}`];
+  if (counts.HOLD) parts.push(`${w('HOLD')} ${counts.HOLD}`);
+  if (counts['NO-GO']) parts.push(`${w('NO-GO')} ${counts['NO-GO']}`);
   const tone = counts['NO-GO'] ? 'danger' : counts.HOLD ? 'warning' : counts.GO ? 'success' : 'neutral';
   return { text: parts.join(' · '), tone };
 }

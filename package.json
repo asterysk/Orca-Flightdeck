@@ -6,7 +6,7 @@
   "description": "Orca Flightdeck: a flight deck for your Orca coding agents, with an on-screen deck that matches any Stream Deck.",
   "license": "MIT",
   "scripts": {
-    "test": "node scripts/build-editor.mjs && node --test --test-concurrency=1 tests/*.test.mjs",
+    "test": "node scripts/build-editor.mjs && node --test --test-concurrency=1 --test-force-exit tests/*.test.mjs",
     "validate": "orca plugin validate .",
     "dev": "orca plugin dev watch .",
     "build": "node scripts/build-editor.mjs"

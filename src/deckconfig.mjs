@@ -195,7 +195,7 @@ export const DEMO_DECK = {
     { id: 'grid', page: 'tools', slot: 1, label: 'GRID', sub: '2×2 panes', glyph: '▦', color: '#8B7CFF', action: 'grid',
       commands: ['top -o cpu -s 2', 'git log --graph --oneline --decorate --all --color -n 60', 'ls -la', 'uptime; df -h'] },
     { id: 'urgent', page: 'mission', slot: 4, label: 'URGENT', sub: 'worst agent', glyph: '!', color: '#FF5D6C', action: 'urgent' },
-    { id: 'answer', page: 'tools', slot: 3, label: 'ANSWER', sub: 'the HOLD', glyph: '↩', color: '#FFC34D', action: 'answer', text: '1', enter: false },
+    { id: 'answer', page: 'tools', slot: 3, label: 'ANSWER', sub: 'needs you', glyph: '↩', color: '#FFC34D', action: 'answer', text: '1', enter: false },
     { id: 'new', page: 'tools', slot: 4, label: 'NEW', sub: '+1 agent', glyph: '+', color: '#A3E635', action: 'new', agents: ['claude'], setup: 'skip', 
       prompt: 'Say hello in one line, then stop.' },
     { id: 'abort', page: 'tools', slot: 5, label: 'ABORT', sub: 'stop + reset', glyph: '■', color: '#FF5D6C', action: 'abort' }
