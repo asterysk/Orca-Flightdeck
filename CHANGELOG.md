@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 · 2026-11-24 · UPDATE key, pinned mini deck, collapse button
+
+No new permissions, commands, panels or shortcuts: installs without re-approval.
 
 - **UPDATE key** on a new Plugin page (last page on every deck): the first tap checks GitHub for a newer release and shows it on the key, the second tap installs it. Installs go through `orca plugin update`, so an update that asks for new access still waits for your approval in Orca. A quick-start clone (dev-loaded folder) updates with `git pull --ff-only`. Installing needs `allow-shell = true`; checking does not. Already have your own `update` key? The page is not added.
 - **Leave the full-width view from its own arrows:** in the full-width tab the ⤢ button turns into a collapse button. Orca does not let plugins close tabs, so with `allow-shell = true` it presses ⌘W in Orca through Orca's computer use (`orca computer hotkey`), closing the tab you just clicked in. Without `allow-shell` it jumps back to the agent most in need and leaves the tab open behind it.
