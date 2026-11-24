@@ -210,7 +210,7 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
   }
   async function expandRoom() {
     const ws = await focusedLocalWorkspace();
-    if (!ws) throw Object.assign(new Error('No local workspace to open the mission room in.'), { code: 'no_workspace' });
+    if (!ws) throw Object.assign(new Error('No local workspace to open the full-width view in.'), { code: 'no_workspace' });
     const dir = join(ws.path, ROOM_DIR);
     // Refuse symlinks: a cloned repo could point .flightdeck (or a file in it) at ~/.zshrc and friends.
     const look = (p) => { try { return fs.lstatSync(p); } catch (e) { if (e?.code === 'ENOENT') return null; throw e; } };
@@ -226,7 +226,7 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
     put(join(dir, '.gitignore'), '*\n', false);
     put(join(dir, ROOM_FILE), '{"missionControl":1}\n', true);
     const opened = await call('editor.open', { workspaceId: ws.id, path: `${ROOM_DIR}/${ROOM_FILE}` });
-    if (!opened) throw Object.assign(new Error('Orca did not open the mission room.'), { code: 'open_failed' });
+    if (!opened) throw Object.assign(new Error('Orca did not open the full-width view.'), { code: 'open_failed' });
     return { opened: true, workspace: ws.name };
   }
   orca.panels.handle('mc.expand', expandRoom);

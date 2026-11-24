@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased · plain words by default
+## 0.6.0 · 2026-11-24 · plain words by default, renamed to Flightdeck for Orca
 
 - **Renamed to Flightdeck for Orca.** The Orca plugin directory reserves display names that start with "Orca" for official plugins. The plugin id (`flightdeck`), settings and `~/.flightdeck/` are unchanged, and so is the repository URL.
 
