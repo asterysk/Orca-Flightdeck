@@ -1,56 +1,38 @@
-# Orca Flightdeck
+<div align="center">
 
-**A flight deck for your coding agents in [Orca](https://orca.dev).** See every agent at a glance, answer the ones waiting on you without hunting for their terminal, and drive Orca from a deck of keys: on screen, or on any Elgato Stream Deck.
+# ✈︎ Orca Flightdeck
 
-> **Public beta (v0.5.0-beta.1).** An independent plugin for Orca, not made by the Orca team. Expect rough edges and please [open an issue](https://github.com/asterysk/Orca-Flightdeck/issues) when you find one.
+**Run a fleet of coding agents like a mission control room.**
 
-![Orca Flightdeck: the mission room with the on-screen deck](images/screenshot-wide.png)
+See every agent at a glance. Answer the ones waiting on you in one click.<br>
+Fly it all from a deck of keys: on screen, or on any Stream Deck.
 
-## What you get
+[![Status: public beta](https://img.shields.io/badge/status-public%20beta-FFC34D?style=flat-square)](CHANGELOG.md)
+[![Orca 1.4.260+](https://img.shields.io/badge/Orca-1.4.260%2B-5EE6CF?style=flat-square)](https://orca.dev)
+[![License: MIT](https://img.shields.io/badge/license-MIT-7FD4FF?style=flat-square)](LICENSE)
+[![Stream Deck: optional](https://img.shields.io/badge/Stream%20Deck-optional-F472B6?style=flat-square)](#-hardware-optional)
 
-| | |
-|---|---|
-| **Consoles** | One card per agent, across every workspace: a callsign, **GO / HOLD / NO-GO / DONE**, workspace, agent, branch, a small activity trace, tokens and time in state. Click a card to jump to its terminal. |
-| **Awaiting Flight** | Every agent that is blocked, waiting or failed, at the top. Type a reply and SEND, or OPEN its terminal. |
-| **Mission room** | The same view as a full-width tab in Orca's main area. Made for a second screen, or for a room. |
-| **The deck** | A grid of keys on screen. It looks and works like a Stream Deck, at any size. Plug a real one in and the same keys appear on it. |
-| **Comms loop, fuel burn, status bar** | Every status change, today's tokens by agent kind, and `GO 3 · HOLD 2` in Orca's status bar. |
-| **Notifications** | A desktop alert when an agent goes HOLD or NO-GO. |
+<img src="images/social-card.png" alt="Orca Flightdeck" width="820">
 
-## Hardware optional
+[**Quick start**](#-quick-start-60-seconds) · [**Features**](#-what-it-does) · [**The deck**](#-the-deck) · [**Customise**](#-make-the-deck-yours) · [**FAQ**](#-faq)
 
-You don't need a Stream Deck. The deck lives in the panel and in the mission room, and its grid can match any model, or any size you like:
+</div>
 
-```
-@deck mini grid = xl        # mini · neo · plus · mk2 · original · xl, or "6x4"
-```
+---
 
-![The on-screen deck as a Stream Deck XL](images/screenshot-wide-xl.png)
+## Why
 
-With a Stream Deck plugged in (and the optional helper running), the real deck takes over. Its own grid replaces the on-screen one, and the screen shows the same keys as a mirror. Unplug it and the on-screen grid comes back.
+[Orca](https://orca.dev) lets you run many AI coding agents at once, each on its own branch. That's powerful, and it gets noisy fast. Five agents in, you're clicking through tabs asking:
 
-## The deck
+- *Which one is stuck?*
+- *Which one is waiting for me to say yes?*
+- *Which one just failed?*
 
-The last key on every page is the page key:
+**Flightdeck puts the answer on one screen.** Every agent gets a callsign and a status: **GO**, **HOLD** or **NO-GO**. Anything waiting on you jumps to the top, with a reply box right there.
 
-- **Tap** it for the next page: 1 → 2 → 3 → 1.
-- **Hold** it (half a second) to jump back to the agents.
+> An independent plugin for Orca, not made by the Orca team.
 
-On screen: click to tap, and hold or right-click to hold.
-
-![The three pages on a Stream Deck Mini](images/deck-pages.png)
-
-| Page | Keys |
-|---|---|
-| **1 · Agents** | Your agents, one colour each, in a fixed order. A band shows GO, HOLD or NO-GO, and HOLD and NO-GO flash. Press to jump to that agent. |
-| **2 · Mission** | **RACE** starts five agents on the same prompt, each in its own new workspace · **PREVIEW** opens Orca's built-in browser · **EXPAND** opens the mission room · **URGENT** jumps to the agent that most needs you · **THEME** recolours all of Orca, dark and light in turn (hold to go back) |
-| **3 · Tools** | **GRID** opens a 2×2 terminal grid · **DRIVE** uses Orca's computer use (experimental) · **ANSWER** types the reply into the agent on HOLD · **NEW** adds one more agent · **ABORT** stops what RACE and NEW started |
-
-A slow key fills with colour and shows "working" until its action is done, so you always know a press landed.
-
-## Install
-
-You need **Orca 1.4.260 or later** (host API 1.10), plus Node.js 20+ for the optional deck helper.
+## 🚀 Quick start (60 seconds)
 
 ```sh
 git clone https://github.com/asterysk/Orca-Flightdeck ~/orca-flightdeck
@@ -58,97 +40,197 @@ cd ~/orca-flightdeck
 orca plugin dev load .
 ```
 
-Orca shows what the plugin may do and prints a fingerprint. If you agree, run the command again with `--approve <fingerprint>`. Then open **Flightdeck** from the rocket icon in Orca's right sidebar.
+Orca shows what the plugin may do and gives you a fingerprint. Run the same command with `--approve <fingerprint>`, then click the **🚀 rocket** in Orca's right sidebar. That's it: no Stream Deck, no extra installs.
 
-The `orca` command is Orca's own command line. If it's missing, turn it on in Orca's Settings (search for **Command line**, then "orca in other terminals").
+<sub>No `orca` command? In Orca's Settings, search **Command line** and turn on "orca in other terminals".</sub>
 
-### Optional: drive a real Stream Deck
+## ✨ What it does
 
-Quit the Elgato Stream Deck app first, because only one program can own the deck. Then:
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🛰 Every agent, one screen
+A console card per agent, across all your workspaces: status, branch, agent type, tokens, time in state and a live activity trace. Click a card to jump straight to its terminal.
+
+</td>
+<td width="50%" valign="top">
+
+### ✋ Awaiting Flight
+Agents that are blocked, waiting or failed float to the top. **Type a reply and hit SEND** without leaving the room, or OPEN the terminal.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🏁 RACE
+One key starts **five agents on the same task**, each in its own new workspace. Compare the results, keep the best. **ABORT** stops them all and cleans up.
+
+</td>
+<td valign="top">
+
+### 🖥 Mission room
+Open the whole view as a **full-width tab**. It's made for a second screen, a team room or a live demo.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🎛 A deck of keys
+A Stream Deck-style grid **on screen**: agents on page one, actions on the next. Hardware is optional.
+
+</td>
+<td valign="top">
+
+### 🔔 Never miss a HOLD
+HOLD and NO-GO keys **flash**, the status bar shows `GO 3 · HOLD 2`, and a desktop alert tells you when an agent needs you.
+
+</td>
+</tr>
+</table>
+
+<img src="images/screenshot-wide.png" alt="The mission room: deck, Awaiting Flight queue, consoles, comms loop and fuel burn">
+
+## 🎛 The deck
+
+Three pages, six keys each on a Stream Deck Mini. The last key turns the page:
+
+- **Tap** it: next page (1 → 2 → 3 → 1).
+- **Hold** it: straight back to your agents.
+
+<img src="images/deck-pages.png" alt="The three deck pages" width="760">
+
+| Page | What's on it |
+|---|---|
+| **1 · Agents** | One key per agent, each in its own colour. Press to jump to it. |
+| **2 · Mission** | **RACE** five agents · **PREVIEW** in Orca's browser · **EXPAND** to the mission room · **URGENT** jump to the agent most in need · **THEME** recolour all of Orca |
+| **3 · Tools** | **GRID** a 2×2 terminal layout · **DRIVE** computer use *(experimental)* · **ANSWER** the agent on HOLD · **NEW** add one agent · **ABORT** stop and clean up |
+
+Every slow key lights up and says **working** until it's done, so you always know a press landed.
+
+## 🔌 Hardware optional
+
+No Stream Deck? The on-screen deck is the full experience. Make it any shape you like:
+
+```
+@deck mini grid = xl     # mini · neo · plus · mk2 · original · xl · or "6x4"
+```
+
+<img src="images/screenshot-wide-xl.png" alt="The on-screen deck as a Stream Deck XL">
+
+Got one? Plug it in and the same keys appear on it. **No Elgato software needed:** Flightdeck drives it directly.
 
 ```sh
 cd ~/orca-flightdeck/deck-helper
-npm install
-./install-launchagent.sh          # starts at login; ./install-launchagent.sh remove to undo
+npm install && ./install-launchagent.sh     # starts at login
 ```
 
-Log: `~/Library/Logs/flightdeck-deck.log`. Any model works: Mini, Neo, MK.2, XL, Plus (keys) and Pedal. The helper reads the deck's own grid.
+Works with the Mini, Neo, MK.2, XL, + and Pedal. Quit the Elgato app first, because only one program can own the deck.
 
-### Optional: the demo deck
+## 🛠 Make the deck yours
 
-```sh
-./scripts/install-demo-deck.sh                # RACE and NEW use the workspace you have open
-./scripts/install-demo-deck.sh my-demo-repo   # or pin them to one project
-```
-
-This writes the three pages above to `~/.flightdeck/deck.vrx`, with shell keys switched on. An older file is kept as a backup.
-
-## Make the deck yours: `~/.flightdeck/deck.vrx`
-
-Keys are plain Verex statements (`@type id attribute = value`), one per line. The file is created the first time Flightdeck runs, and the deck updates within a second of saving.
+Your keys live in one plain text file, `~/.flightdeck/deck.vrx`. Save it and the deck updates within a second.
 
 ```
-@deck mini allow-shell = false
-@deck mini grid = mini
-@deck mini pages = [home, tools]
 @page tools title = "Tools"
 @key ff page = tools
 @key ff slot = 1
 @key ff label = "FIREFOX"
-@key ff sub = "browser"
-@key ff glyph = "◎"
 @key ff color = "#38BDF8"
 @key ff action = app
 @key ff app = "Firefox"
 ```
 
-| `action` | Fields | Does |
-|---|---|---|
-| `page` | `target` | Opens a page (`home` is the agents page) |
-| `orca` | `target` | Runs an Orca built-in action, e.g. `"sidebar.right.toggle"` |
-| `urgent` · `expand` · `refresh` | | Most urgent agent · mission room · poll now |
-| `focus` | `workspace` | Jumps to that workspace's agent, or opens the workspace |
-| `launch` | `agent`, `workspace`, `prompt` | Starts an agent in an existing workspace |
-| `race` · `new` | `agents`, `count`, `prompt`, `setup`, `project` | New workspaces, each starting an agent with the prompt |
-| `answer` | `text`, `enter` | Types into the agent at the top of Awaiting Flight |
-| `abort` | | Stops what `race` and `new` started; with allow-shell, also removes those workspaces |
-| `theme` | | Next colour scheme for all of Orca (hold: back to a dark look) |
-| `app` · `url` | `app` · `url` | Opens a Mac app · an http(s) link |
-| `grid` · `preview` · `drive` | `commands` · `url` · `app`, `find`, `text`, `keys` | Uses the `orca` command line: 2×2 terminal panes · built-in browser tab · computer use |
-| `shortcut` · `shell` | `name` · `run` | Runs a macOS Shortcut · a shell command |
-
-Deck settings: `allow-shell`, `grid`, `pages` (the page order) and `orca-cli` (the path to `orca`, if it isn't found). Mistakes appear in the plugin log, and the deck keeps the last good lines.
-
-## Safety
-
-- **Nothing types into an agent unless you press something.** SEND, ANSWER and ABORT are the only actions that send input.
-- **Shell keys are off by default.** `shell`, `shortcut`, `grid`, `preview` and `drive` only run with `allow-shell = true` in `deck.vrx`, **and** only when the file can't be written by other users (`chmod 600`). Until then they show "shell off".
-- **The deck helper's link is local and private.** The plugin listens on `127.0.0.1` on a random port and writes a token to `~/.flightdeck/deck.json` (mode 600). A web page can reach a loopback port but can't read that file, so it can't connect.
-- **THEME changes Orca's selected theme.** Orca doesn't let a plugin switch back to a built-in theme, so holding THEME applies a close copy of Orca's dark look. To get your own theme back exactly, pick it in Orca's settings.
-- **RACE creates real branches and workspaces** in your project. Try it in a scratch repository first.
-
-## Known limits (beta)
-
-- After the plugin restarts, ABORT forgets which agents RACE started.
-- DRIVE (computer use) depends on the app's window being on your current desktop. It's experimental.
-- Starting a phone simulator from a key was dropped: it used too much memory to start live.
-- macOS only for the deck helper. The plugin itself follows Orca's platforms.
-
-## Develop
+Want the full demo deck, with RACE, THEME and the rest?
 
 ```sh
-orca plugin dev watch .            # load into Orca and live-reload
-npm test                           # unit tests against a fake Orca host and a fake CLI
-orca plugin validate .             # Orca's manifest checks
-python3 scripts/preview-shot.py    # README screenshots from sample data (Playwright + Chrome)
+./scripts/install-demo-deck.sh
 ```
 
-Project layout: `src/worker.mjs` talks to Orca, `src/fleet.mjs` keeps the agent model, `src/deck.mjs` draws the keys, `src/deckconfig.mjs` reads `deck.vrx`, `src/bridge.mjs` is the local link to the helper, `deck-helper/` drives the hardware, and `panel/index.html` is the UI (`editor/index.html` is built from it).
+<details>
+<summary><b>Every key action</b></summary>
 
-## Credits
+| `action` | Fields | Does |
+|---|---|---|
+| `page` | `target` | Opens a page (`home` = agents) |
+| `orca` | `target` | Runs an Orca built-in, e.g. `"sidebar.right.toggle"` |
+| `urgent` · `expand` · `refresh` | | Worst agent · mission room · poll now |
+| `focus` | `workspace` | Jumps to a workspace's agent |
+| `launch` | `agent`, `workspace`, `prompt` | Starts an agent in a workspace |
+| `race` · `new` | `agents`, `count`, `prompt`, `setup`, `project` | New workspaces, one agent each |
+| `answer` | `text`, `enter` | Replies to the agent on HOLD |
+| `abort` | | Stops what RACE/NEW started |
+| `theme` | | Next colour scheme (hold: back to dark) |
+| `app` · `url` | `app` · `url` | Opens a Mac app · a link |
+| `grid` · `preview` · `drive` | `commands` · `url` · `app`, `find`, `text` | Uses Orca's command line |
+| `shortcut` · `shell` | `name` · `run` | A macOS Shortcut · a shell command |
 
-Pairing approach for the deck helper adapted from [crilofer/orca-streamdeck](https://github.com/crilofer/orca-streamdeck) (MIT). Hardware access through [`@elgato-stream-deck/node`](https://github.com/Julusian/node-elgato-stream-deck). Elgato and Stream Deck are trademarks of Corsair; this project isn't affiliated with Corsair or with Orca.
+Deck settings: `allow-shell`, `grid`, `pages` (order), `orca-cli` (path to `orca`).
 
-## License
+</details>
 
-MIT © 2026 Steve Charles
+## 🔒 Safe by default
+
+- **Nothing types into an agent unless you press a key.**
+- **Keys that run programs are off** until you set `allow-shell = true`, and the file must be private (`chmod 600`).
+- **The hardware link is local-only,** guarded by a token in a file only you can read.
+- **RACE makes real branches.** Try it in a scratch repo first.
+
+## ❓ FAQ
+
+<details><summary><b>Do I need a Stream Deck?</b></summary>
+No. The on-screen deck does everything, and you can shape it like any model.
+</details>
+
+<details><summary><b>Which agents does it work with?</b></summary>
+Any agent Orca runs: Claude Code, Codex, OpenCode, Gemini, Hermes and the rest.
+</details>
+
+<details><summary><b>Does it send my code anywhere?</b></summary>
+Flightdeck itself sends nothing anywhere: it runs inside Orca on your machine and only talks to Orca. Your agents talk to their own model providers as usual.
+</details>
+
+<details><summary><b>THEME changed my colours. How do I get mine back?</b></summary>
+Hold THEME for a close copy of Orca's dark look, or pick your own theme again in Orca's settings. Orca doesn't let plugins switch built-in themes back.
+</details>
+
+<details><summary><b>Windows or Linux?</b></summary>
+The plugin follows Orca's platforms. The optional hardware helper is macOS-only for now.
+</details>
+
+## 🗺 Roadmap
+
+- [x] Mission room, Awaiting Flight, consoles
+- [x] On-screen deck in any grid, Stream Deck optional
+- [x] RACE / ABORT, THEME, page key with hold
+- [ ] Remember RACE runs across restarts
+- [ ] Dials and touch strip on Stream Deck +
+- [ ] Remote agents: see teammates' agents in your room
+- [ ] Rules that can stop an agent before it acts
+
+## 🤝 Contributing
+
+Issues and pull requests are welcome. To hack on it:
+
+```sh
+orca plugin dev watch .     # live-reload in Orca
+npm test                    # tests against a fake Orca
+```
+
+<details><summary>Project layout</summary>
+
+`src/worker.mjs` talks to Orca · `src/fleet.mjs` agent model · `src/deck.mjs` draws keys · `src/deckconfig.mjs` reads `deck.vrx` · `src/bridge.mjs` local link to the hardware helper · `deck-helper/` drives the Stream Deck · `panel/index.html` the UI
+
+</details>
+
+## 🙏 Credits
+
+Deck pairing idea from [crilofer/orca-streamdeck](https://github.com/crilofer/orca-streamdeck). Hardware access via [`@elgato-stream-deck/node`](https://github.com/Julusian/node-elgato-stream-deck). Elgato and Stream Deck are trademarks of Corsair. Not affiliated with Corsair or Orca.
+
+<div align="center">
+
+**MIT © 2026 Steve Charles** · If Flightdeck saves you a few tab-hunts, a ⭐ helps others find it.
+
+</div>
