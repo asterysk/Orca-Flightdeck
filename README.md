@@ -76,7 +76,7 @@ One key starts **five agents on the same task**, each in its own new workspace. 
 <td valign="top">
 
 ### 🖥 Full-width view
-Open the whole view as a **full-width tab**. It's made for a second screen, a team room or a live demo.
+Open the whole view as a **full-width tab** with the ⤢ arrows, and click them again to close it. It's made for a second screen, a team room or a live demo.
 
 </td>
 </tr>
@@ -117,7 +117,7 @@ Every slow key lights up and says **working** until it's done, so you always kno
 
 ## 🔌 Hardware optional
 
-No Stream Deck? The on-screen deck is the full experience. Make it any shape you like:
+No Stream Deck? The on-screen deck is the full experience. Press **PIN** on it to keep a small deck right under the counts in the sidebar. Make it any shape you like:
 
 ```
 @deck mini grid = xl     # mini · neo · plus · mk2 · original · xl · or "6x4"

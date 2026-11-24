@@ -73,7 +73,8 @@ function fakeOrca(minor = 10, settings = { notify: true }) {
     'statusBar.update': { ok: true },
     'notifications.show': { delivered: true },
     'terminal.focus': { focused: true },
-    'terminal.sendText': { accepted: true }
+    'terminal.sendText': { accepted: true },
+    'commands.run': { ran: true }
   };
   return {
     calls, handlers, posts, fire: (e) => listener(e),
@@ -121,6 +122,20 @@ test('Mission mode setting: GO / HOLD wording, callsigns in notifications and on
     orca.fire({ workspaceId: 'w1', workspaceListId: 'w1', paneKey: 'p', terminalId: 't1', state: 'blocked', receivedAt: Date.now() });
     await new Promise((r) => setTimeout(r, 300));
     assert.ok(orca.calls.some(([n, p]) => n === 'notifications.show' && p.title === 'FIDO needs Flight'));
+  } finally {
+    w.stop();
+  }
+});
+
+test('collapse closes the full-width tab with Orca\'s close-active-tab action, and says so when it cannot', async () => {
+  const orca = fakeOrca();
+  const w = startWorker(orca, { pollMs: 1e9 });
+  try {
+    await w.ready;
+    assert.deepEqual(await orca.handlers.get('mc.collapse')(), { closed: true });
+    assert.ok(orca.calls.some(([n, p]) => n === 'commands.run' && p.action === 'tab.close'));
+    orca.host.call = async (name) => { if (name === 'commands.run') throw Object.assign(new Error('nope'), { code: 'denied' }); };
+    await assert.rejects(() => orca.handlers.get('mc.collapse')(), /Press ⌘W instead/);
   } finally {
     w.stop();
   }

@@ -92,6 +92,18 @@ body:not(.mission) .con .cs{letter-spacing:.02em}
 .compact .con .cs-c,.compact .con .pill-c{display:inline-block}
 .con .cs-c,.con .pill-c{display:none}
 .compact .con .t1{flex:1 1 auto;min-width:0;color:var(--muted)}
+.deckmeta{display:flex;align-items:center;gap:8px;min-width:0}
+.pinbtn{min-height:24px;padding:0 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:10px;letter-spacing:.14em}
+.pinbtn:hover{color:var(--fg);border-color:#3C5677}
+.pinbtn[aria-pressed="true"]{color:var(--accent);border-color:#25446E;background:#0B1626}
+/* Pinned mini deck: under the counts, always open, small keys, no how-to line. */
+#deck-box.mini{padding:8px 10px}
+#deck-box.mini>summary{margin-bottom:6px}
+#deck-box.mini>summary h2::before{display:none}
+#deck-box.mini #deck-help,#deck-box.mini #deck-state{display:none}
+#deck-box.mini>summary h2{white-space:nowrap}
+#deck-box.mini .deckgrid{gap:4px}
+#deck-box.mini .deckkey{border-radius:6px}
 .deckhdr{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0}
 .deckgrid{display:grid;gap:6px;max-width:300px}
 .deckkey{padding:0;border:1px solid var(--line);border-radius:8px;background:#0A0F18;overflow:hidden;aspect-ratio:1/1;cursor:pointer}
@@ -126,7 +138,7 @@ body:not(.mission) .con .cs{letter-spacing:.02em}
     <div class="counts" id="counts" role="status" aria-live="polite"></div>
     <div style="display:flex;gap:6px;align-items:center">
     <span id="collapse-hint" class="note" hidden>Close this tab (⌘W) to return to the sidebar</span>
-    <button class="iconbtn" id="expand" aria-label="Open the full-width view in a tab" title="Open the full-width view in a tab"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+    <button class="iconbtn" id="expand" aria-label="Open the full-width view in a tab" title="Open the full-width view in a tab"><svg id="icon-expand" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg><svg id="icon-collapse" hidden aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg></button>
     <button class="iconbtn" id="refresh" aria-label="Refresh now" title="Refresh now"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
     </div>
   </header>
@@ -150,7 +162,7 @@ body:not(.mission) .con .cs{letter-spacing:.02em}
     </div>
     <div class="side" id="side">
       <details class="box" id="deck-box" data-fold="deck">
-        <summary title="On-screen keys: your agents on the first page, actions on the next. A Stream Deck is optional."><h2 id="deck-title">DECK</h2><span class="note" id="deck-state"></span></summary>
+        <summary title="On-screen keys: your agents on the first page, actions on the next. A Stream Deck is optional."><h2 id="deck-title">DECK</h2><span class="deckmeta"><span class="note" id="deck-state"></span><button class="pinbtn" id="deck-pin" type="button" aria-pressed="false" title="Pin a small deck under the counts">PIN</button></span></summary>
         <div class="body">
           <div class="deckgrid" id="deck"></div>
           <div class="note" id="deck-help">Click a key to press it. Hold it or right-click to hold. The last key turns the page. Plug in a Stream Deck and the same keys appear on it.</div>
@@ -232,7 +244,7 @@ function hintItems() {
     `${w('HOLD')}: agents waiting for your answer. Type a reply and press SEND, or OPEN to go to its terminal.`,
     `${mission ? '<b>Consoles</b>' : '<b>Agents</b>'}: every agent in every workspace, with its branch and status. Click one to open its terminal.`,
     `Colours: ${['GO', 'HOLD', 'NO-GO', 'DONE'].map((s) => `<span style="color:${COLOR[s]}">${esc(word(s))}</span>`).join(' · ')}.`,
-    `<b>Deck</b> (${inEditor ? 'at the top' : 'folded below; click to open'}): on-screen keys for your agents and actions like RACE. A Stream Deck is optional.`
+    `<b>Deck</b> (${inEditor ? 'at the top' : deckPinned ? 'pinned at the top' : 'folded below; click to open, or PIN it'}): on-screen keys for your agents and actions like RACE. A Stream Deck is optional.`
   ].map((t) => `<li>${t}</li>`).join('')
 }
 
@@ -293,7 +305,9 @@ function render() {
     $('deck-title').textContent = `DECK · ${page}`
     $('deck-state').innerHTML = `<span class="dot" style="background:${d.connected ? 'var(--go)' : 'var(--dim)'}"></span>${d.connected ? esc(d.model || 'connected') : 'on screen · ' + esc(d.screen || 'no deck')}`
     $('deck').style.gridTemplateColumns = `repeat(${d.cols || 3}, minmax(0, 1fr))`
-    $('deck').style.maxWidth = `${(d.cols || 3) * ((d.cols || 3) <= 3 ? 100 : (d.cols || 3) <= 5 ? 84 : 68)}px`
+    const cols = d.cols || 3
+    const keyPx = deckPinned ? (cols <= 5 ? 56 : 44) : cols <= 3 ? 100 : cols <= 5 ? 84 : 68
+    $('deck').style.maxWidth = `${cols * keyPx}px`
     $('deck').innerHTML = d.keys.map((svg, i) => `<button class="deckkey" data-deck="${i}" aria-label="Deck key ${i + 1}: ${esc(d.labels?.[i] || 'empty')}"><img alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}"></button>`).join('')
   }
 
@@ -408,18 +422,51 @@ readPref('hintDismissed').then((v) => {
 })
 $('hint-ok').addEventListener('click', () => { $('hint').hidden = true; savePref('hintDismissed', 'yes') })
 
+// Pinned mini deck (sidebar only): small keys under the counts, always open. Remembered.
+let deckPinned = false
+const deckBox = $('deck-box')
+function applyPin() {
+  const pin = $('deck-pin')
+  pin.setAttribute('aria-pressed', String(deckPinned))
+  pin.textContent = deckPinned ? 'UNPIN' : 'PIN'
+  pin.title = deckPinned ? 'Put the deck back with the other folded sections' : 'Pin a small deck under the counts'
+  deckBox.classList.toggle('mini', deckPinned)
+  if (deckPinned) { $('app').insertBefore(deckBox, $('hint')); deckBox.open = true }
+  else if (deckBox.parentElement !== $('side')) $('side').insertBefore(deckBox, $('side').firstChild)
+  render()
+}
+$('deck-pin').addEventListener('click', (ev) => {
+  ev.preventDefault() // the button sits in the <summary>: do not fold the deck as well
+  ev.stopPropagation()
+  deckPinned = !deckPinned
+  savePref('deckPinned', deckPinned ? 'yes' : 'no')
+  applyPin()
+})
+// A pinned deck stays open: folding it would hide the whole point.
+deckBox.addEventListener('toggle', () => { if (deckPinned && !deckBox.open) deckBox.open = true })
+
 if (inEditor) {
-  // The full-width room: the deck goes up top, open, like the hardware on a desk.
-  const deckBox = $('deck-box')
+  // The full-width view: the deck goes up top, open, like the hardware on a desk.
   $('app').insertBefore(deckBox, $('queue-box'))
-  $('expand').hidden = true
-  $('collapse-hint').hidden = false
+  $('deck-pin').hidden = true
+  // The arrows turn inwards and close this tab, back to the sidebar.
+  // toggleAttribute, not .hidden: SVG elements have no hidden property.
+  $('icon-expand').toggleAttribute('hidden', true)
+  $('icon-collapse').toggleAttribute('hidden', false)
+  $('expand').title = 'Close the full-width view'
+  $('expand').setAttribute('aria-label', 'Close the full-width view')
   host?.document?.session?.().catch?.(() => {})
   setInterval(() => load(), 3000)
+} else {
+  readPref('deckPinned').then((v) => { if (v === 'yes') { deckPinned = true; applyPin() } })
 }
 $('expand').addEventListener('click', async () => {
-  try { await request('mc.expand') ; $('error').hidden = true }
-  catch (e) { $('error').hidden = false; $('error').textContent = e?.message || String(e) }
+  try { await request(inEditor ? 'mc.collapse' : 'mc.expand'); $('error').hidden = true }
+  catch (e) {
+    $('error').hidden = false
+    $('error').textContent = e?.message || String(e)
+    if (inEditor) $('collapse-hint').hidden = false
+  }
 })
 
 // Local clock between snapshots.

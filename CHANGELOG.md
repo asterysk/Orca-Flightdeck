@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Close the full-width view from its own arrows:** in the full-width tab the ⤢ button turns into a collapse button that closes the tab (Orca's "close active tab"). If Orca refuses, it says so and suggests ⌘W.
+- **Pinned mini deck:** a PIN button on the deck keeps a small deck (about 56px keys) under the counts in the sidebar, always open. UNPIN puts it back with the folded sections. Remembered between sessions.
+
 ## 0.6.0 · 2026-11-24 · plain words by default, renamed to Flightdeck for Orca
 
 - **Renamed to Flightdeck for Orca.** The Orca plugin directory reserves display names that start with "Orca" for official plugins. The plugin id (`flightdeck`), settings and `~/.flightdeck/` are unchanged, and so is the repository URL.

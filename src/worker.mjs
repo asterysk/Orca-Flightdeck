@@ -230,6 +230,13 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
     return { opened: true, workspace: ws.name };
   }
   orca.panels.handle('mc.expand', expandRoom);
+  // The full-width view's collapse button: close the tab it lives in. The click that pressed the
+  // button made that tab the active one, so Orca's own "close active tab" action closes exactly it.
+  orca.panels.handle('mc.collapse', async () => {
+    const r = await call('commands.run', { action: 'tab.close' });
+    if (!r) throw Object.assign(new Error(`Could not close the tab (${lastError || 'Orca refused'}). Press ⌘W instead.`), { code: 'close_failed' });
+    return { closed: true };
+  });
   try { orca.commands?.register?.('expand', () => expandRoom()); } catch (e) { orca.log(`Flightdeck: command unavailable: ${e?.message ?? e}`); }
 
   // A deck key was pressed, on the hardware or in the panel's mirror.
