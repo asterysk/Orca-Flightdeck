@@ -15,11 +15,14 @@ You need [Orca](https://orca.dev) 1.4.260 or newer and Node 20 or newer.
 ```sh
 git clone https://github.com/asterysk/Orca-Flightdeck
 cd Orca-Flightdeck
-orca plugin dev watch .     # live-reload in Orca
+orca plugin dev load .      # load in Orca (reloads on save; first time prints an --approve line)
+orca plugin validate .      # Orca's own manifest check
 npm test                    # tests against a fake Orca
 ```
 
 The Stream Deck helper lives in `deck-helper/` and needs its own `npm install`.
+
+Read Orca's [plugin authoring guide](https://github.com/stablyai/orca/blob/main/docs/reference/plugin-authoring.md) before changing `orca-plugin.json`: it covers execution levels, capabilities, approvals and how updates reach users.
 
 ## Pull requests
 
