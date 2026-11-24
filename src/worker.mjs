@@ -4,7 +4,9 @@ import { mkdirSync, writeFileSync, existsSync, readFileSync, statSync, lstatSync
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { execFile } from 'node:child_process';
-import { buildConfig, DEFAULT_DECK_VRX, POWERFUL } from './deckconfig.mjs';
+import { fileURLToPath } from 'node:url';
+import { buildConfig, DEFAULT_DECK_VRX, POWERFUL, withPluginPage } from './deckconfig.mjs';
+import { createUpdater } from './updater.mjs';
 import { createFleet, statusBarText } from './fleet.mjs';
 import { createDeck } from './deck.mjs';
 import { startBridge as defaultStartBridge } from './bridge.mjs';
@@ -47,7 +49,7 @@ export function deactivate() {
   running = null;
 }
 
-export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = () => Date.now(), fs = { mkdirSync, writeFileSync, existsSync, lstatSync }, startBridge = defaultStartBridge, exec = execFile, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = () => Date.now(), fs = { mkdirSync, writeFileSync, existsSync, lstatSync }, startBridge = defaultStartBridge, exec = execFile, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), fetch = globalThis.fetch, pluginRoot = fileURLToPath(new URL('..', import.meta.url)) } = {}) {
   const fleet = createFleet({ now });
   const deck = createDeck({ keys: 6, needsShell: (a) => POWERFUL.has(a) });
   let phase = false; // pulse beat for HOLD / NO-GO keys
@@ -256,7 +258,7 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
         mkdirSync(dirname(configPath), { recursive: true, mode: 0o700 });
         writeFileSync(configPath, DEFAULT_DECK_VRX, { mode: 0o600 });
       }
-      const cfg = buildConfig(readFileSync(configPath, 'utf8'));
+      const cfg = withPluginPage(buildConfig(readFileSync(configPath, 'utf8')));
       // allow-shell needs a file, and a folder, that only this user owns and can write.
       const me = process.getuid?.();
       const mine = (st) => (st.mode & 0o022) === 0 && (me == null || st.uid === me);
@@ -296,7 +298,7 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
 
   // A deck key was pressed, on the hardware or in the panel's mirror.
   // Actions that take a while: the key shows "working" from the press until they finish.
-  const SLOW = new Set(['race', 'new', 'abort', 'theme', 'grid', 'preview', 'phone', 'drive', 'answer', 'shell', 'shortcut', 'app']);
+  const SLOW = new Set(['update', 'race', 'new', 'abort', 'theme', 'grid', 'preview', 'phone', 'drive', 'answer', 'shell', 'shortcut', 'app']);
   async function deckPress(index, { hold = false } = {}) {
     const token = deck.keyAt(Number(index));
     const action = hold ? deck.hold(Number(index)) : deck.press(Number(index));
@@ -389,6 +391,12 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
       case 'drive':
         await drive(action);
         break;
+      case 'update': {
+        const msg = await updater.tap({ canInstall: shellTrusted });
+        deck.setFace('update', updater.face());
+        tell(msg.title, msg.body);
+        break;
+      }
       default:
         break;
     }
@@ -398,6 +406,8 @@ export function startWorker(orca, { pollMs = POLL_MS, pulseMs = PULSE_MS, now = 
 
   // ---- Demo actions -------------------------------------------------------------------------
   const cli = createOrcaCli({ exec, log: (m) => tell('Flightdeck', m), configured: () => deck.config.orcaCli });
+  const updater = createUpdater({ root: pluginRoot, fetch, exec, orcaBinary: () => cli.binary(), log: (m) => orca.log(`Flightdeck: ${m}`) });
+  deck.setFace('update', updater.face());
   const launched = []; // { workspaceId, terminalId } this plugin started, for ABORT
   let themeAt = -1;
 

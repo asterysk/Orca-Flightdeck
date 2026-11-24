@@ -68,7 +68,7 @@ async function boot(opts = {}) {
   demoConfig(opts);
   const orca = fakeOrca(opts.answers);
   const { exec, runs } = fakeExec();
-  const w = startWorker(orca, { pollMs: 1e9, exec, sleep: async () => {}, now: () => Date.UTC(2026, 10, 24, 9, 30, 15) });
+  const w = startWorker(orca, { pollMs: 1e9, exec, sleep: async () => {}, now: () => Date.UTC(2026, 10, 24, 9, 30, 15), ...(opts.fetch ? { fetch: opts.fetch } : {}) });
   await w.ready;
   const press = (index, hold = false) => orca.handlers.get('mc.deckPress')({ index, hold });
   return { orca, runs, w, press, calls: (name) => orca.calls.filter(([n]) => n === name).map(([, p]) => p) };
@@ -297,4 +297,21 @@ test('collapse with allow-shell off does not touch the CLI', async () => {
   } finally {
     w.stop();
   }
+});
+
+test('UPDATE on the Plugin page: first press checks GitHub, second installs with orca plugin update', async () => {
+  const fetch = async () => ({ ok: true, json: async () => [{ name: 'v0.6.0' }, { name: 'v99.0.0' }] });
+  const { orca, runs, press } = await boot({ fetch });
+  let deck = await press(5); // agents -> mission
+  deck = await press(5); // -> tools
+  deck = await press(5); // -> plugin
+  assert.equal(deck.labels[0], 'UPDATE');
+  await press(0);
+  deck = await press(3); // an empty key: just redraws
+  assert.match(deck.keys[0], /v99\.0\.0/);
+  assert.ok(orca.calls.some(([n, p]) => n === 'notifications.show' && /v99\.0\.0 is out/.test(p.title)));
+  assert.equal(runs.length, 0);
+  await press(0);
+  assert.deepEqual(runs.at(-1).args, ['plugin', 'update', 'asterysk.flightdeck', '--json']);
+  assert.equal(runs.at(-1).file, '/fake/orca');
 });

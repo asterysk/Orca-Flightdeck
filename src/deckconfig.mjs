@@ -4,7 +4,7 @@
 
 export const ACTIONS = [
   'page', 'orca', 'urgent', 'expand', 'refresh', 'focus', 'launch', 'app', 'url', 'shortcut', 'shell',
-  'race', 'new', 'answer', 'abort', 'theme', 'grid', 'preview', 'phone', 'drive'
+  'race', 'new', 'answer', 'abort', 'theme', 'grid', 'preview', 'phone', 'drive', 'update'
 ];
 // Actions that run programs on the Mac (a shell, Shortcuts, or the `orca` command line):
 // only run when the file says `@deck <id> allow-shell = true` and only this user can write it.
@@ -211,4 +211,18 @@ export const DEMO_DECK_VRX = toVrx({ ...DEMO_DECK, allowShell: true });
 export function demoDeckVrx(project) {
   const keys = project ? DEMO_DECK.keys.map((k) => (k.action === 'race' || k.action === 'new' ? { ...k, project } : k)) : DEMO_DECK.keys;
   return toVrx({ ...DEMO_DECK, keys, allowShell: true });
+}
+
+// Built-in last page: UPDATE (tap: check GitHub for a newer release; tap again: install it).
+// Added to every deck unless the file already has an `update` key somewhere, or its own "flightdeck" page.
+export const PLUGIN_PAGE = {
+  id: 'flightdeck',
+  title: 'Plugin',
+  keys: [{ id: 'update', page: 'flightdeck', slot: 1, label: 'UPDATE', sub: 'check', glyph: '↻', color: '#A3E635', action: 'update' }]
+};
+export function withPluginPage(cfg) {
+  const pages = Object.values(cfg.pages);
+  if (cfg.pages[PLUGIN_PAGE.id] || pages.some((p) => p.keys.some((k) => k.action === 'update'))) return cfg;
+  const order = cfg.order?.length ? [...cfg.order, PLUGIN_PAGE.id] : cfg.order;
+  return { ...cfg, order, pages: { ...cfg.pages, [PLUGIN_PAGE.id]: { ...PLUGIN_PAGE, keys: PLUGIN_PAGE.keys.map((k) => ({ ...k })) } } };
 }
