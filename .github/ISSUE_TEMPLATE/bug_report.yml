@@ -1,0 +1,47 @@
+name: Bug report
+description: Something in Flightdeck doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. For security problems, please use the Security tab instead (see SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Flightdeck panel
+        2. Press RACE
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Flightdeck version, Orca version, and your OS.
+      placeholder: Flightdeck 0.5.0-beta.1 · Orca 1.4.260 · macOS 15
+    validations:
+      required: true
+  - type: dropdown
+    id: deck
+    attributes:
+      label: Which deck?
+      options:
+        - On-screen deck only
+        - Stream Deck hardware
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Output of `orca plugin logs flightdeck` if it helps. Remove anything private first.
+      render: text
