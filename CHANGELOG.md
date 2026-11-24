@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 · 2026-11-24 · listed in the Orca plugin directory
+
+- Same code as 0.5.0-beta.1, still a beta. Version is plain `0.5.0` because the Orca directory only lists `vX.Y.Z` tags.
+- Added `publisher` to the manifest (required by the directory).
+
 ## 0.5.0-beta.1 · 2026-11-24 · first public beta
 
 - Renamed to **Orca Flightdeck** (plugin id `flightdeck`, config in `~/.flightdeck/`).
